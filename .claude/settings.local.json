@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(php artisan:*)",
+      "Bash(composer require:*)",
+      "Bash(npm run build:*)",
+      "Bash(dir:*)",
+      "Bash(findstr:*)",
+      "Bash(ls:*)",
+      "Bash(php check_categorias.php:*)",
+      "Bash(del \"resources\\\\views\\\\components\\\\dark-mode-script.blade.php\")",
+      "Bash(del \"resources\\\\views\\\\components\\\\dark-mode-toggle.blade.php\")",
+      "WebSearch",
+      "Bash(rm:*)"
+    ]
+  }
+}
