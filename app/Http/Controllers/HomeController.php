@@ -23,16 +23,29 @@ class HomeController extends Controller
             return redirect()->route('cozinha.index');
         }
 
-        // Estatísticas gerais
+        // Processar filtros de data
+        $dataInicio = request()->get('data_inicio')
+            ? \Carbon\Carbon::parse(request()->get('data_inicio'))->startOfDay()
+            : today()->startOfDay();
+        $dataFim = request()->get('data_fim')
+            ? \Carbon\Carbon::parse(request()->get('data_fim'))->endOfDay()
+            : today()->endOfDay();
+
+        // Estatísticas gerais filtradas por período
         $stats = [
-            'pedidos_abertos' => Pedido::whereIn('status', ['aberto', 'em_preparo'])->count(),
+            'pedidos_abertos' => Pedido::whereIn('status', ['aberto', 'em_preparo'])
+                ->whereBetween('created_at', [$dataInicio, $dataFim])
+                ->count(),
             'mesas_ocupadas' => Mesa::where('status', 'ocupada')->count(),
-            'total_hoje' => Pagamento::whereDate('created_at', today())->sum('valor_total'),
+            'total_hoje' => Pagamento::whereBetween('created_at', [$dataInicio, $dataFim])
+                ->where('status', 'aprovado')
+                ->sum('total'),
             'produtos_ativos' => Produto::where('ativo', true)->count(),
         ];
 
-        // Pedidos recentes (mostra mais com rolagem)
+        // Pedidos recentes (mostra mais com rolagem) - filtrados por período
         $pedidos_recentes = Pedido::with(['mesa', 'user', 'itens.produto'])
+            ->whereBetween('created_at', [$dataInicio, $dataFim])
             ->latest()
             ->limit(20)
             ->get();
@@ -58,6 +71,13 @@ class HomeController extends Controller
                 return $mesa;
             });
 
-        return view('home', compact('stats', 'pedidos_recentes', 'mesas_ocupadas', 'user'));
+        return view('home', [
+            'stats' => $stats,
+            'pedidos_recentes' => $pedidos_recentes,
+            'mesas_ocupadas' => $mesas_ocupadas,
+            'user' => $user,
+            'dataInicio' => $dataInicio->format('Y-m-d'),
+            'dataFim' => $dataFim->format('Y-m-d')
+        ]);
     }
 }

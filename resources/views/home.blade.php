@@ -18,13 +18,37 @@
         </div>
     </div>
 
+    <!-- Filtro de Data -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <form method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Data Início</label>
+                <input type="date" name="data_inicio" value="{{ $dataInicio ?? '' }}" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Data Fim</label>
+                <input type="date" name="data_fim" value="{{ $dataFim ?? '' }}" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
+            </div>
+            <div>
+                <button type="submit" class="w-full px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition">
+                    Filtrar
+                </button>
+            </div>
+            <div>
+                <a href="{{ route('home') }}" class="block w-full px-6 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-semibold transition text-center">
+                    Limpar Filtro
+                </a>
+            </div>
+        </form>
+    </div>
+
     <!-- Stats Cards -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <!-- Pedidos Abertos -->
+        <!-- Pedidos do Período -->
         <div class="dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-md transition-shadow border border-gray-200 dark:border-gray-700 p-6">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Pedidos Abertos</p>
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Pedidos do Período</p>
                     <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">{{ $stats['pedidos_abertos'] }}</p>
                 </div>
                 <div class="flex-shrink-0 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-3 shadow-lg shadow-blue-500/30">
@@ -50,11 +74,11 @@
             </div>
         </div>
 
-        <!-- Faturamento Hoje -->
+        <!-- Faturamento do Período -->
         <div class="dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-md transition-shadow border border-gray-200 dark:border-gray-700 p-6">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Faturamento Hoje</p>
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Faturamento do Período</p>
                     <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">R$ {{ number_format($stats['total_hoje'], 2, ',', '.') }}</p>
                 </div>
                 <div class="flex-shrink-0 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-xl p-3 shadow-lg shadow-yellow-500/30">

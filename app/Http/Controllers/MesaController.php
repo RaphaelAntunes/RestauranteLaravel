@@ -146,7 +146,7 @@ class MesaController extends Controller
             ->groupBy('categoria.nome');
 
         // Ordenar categorias manualmente na ordem desejada
-        $ordemCategorias = ['Pizza Fatia', 'Bebidas', 'Pizzas', 'Pizzas Doces', 'Bordas Recheadas'];
+        $ordemCategorias = ['Pizzas', 'Pizzas Doces',  'Bebidas', 'Bordas Recheadas'];
         $produtos = collect();
 
         foreach ($ordemCategorias as $categoria) {

@@ -24,8 +24,12 @@ class RelatorioController extends Controller
      */
     public function vendas(Request $request)
     {
-        $dataInicio = $request->get('data_inicio', today()->startOfMonth());
-        $dataFim = $request->get('data_fim', today());
+        $dataInicio = $request->get('data_inicio')
+            ? \Carbon\Carbon::parse($request->get('data_inicio'))->startOfDay()
+            : today()->startOfMonth()->startOfDay();
+        $dataFim = $request->get('data_fim')
+            ? \Carbon\Carbon::parse($request->get('data_fim'))->endOfDay()
+            : today()->endOfDay();
 
         // Faturamento total
         $faturamento = Pagamento::whereBetween('created_at', [$dataInicio, $dataFim])
@@ -55,15 +59,15 @@ class RelatorioController extends Controller
             ->groupBy('forma_pagamento')
             ->get();
 
-        return view('relatorios.vendas', compact(
-            'dataInicio',
-            'dataFim',
-            'faturamento',
-            'totalPedidos',
-            'ticketMedio',
-            'vendasPorDia',
-            'vendasPorFormaPagamento'
-        ));
+        return view('relatorios.vendas', [
+            'dataInicio' => $dataInicio->format('Y-m-d'),
+            'dataFim' => $dataFim->format('Y-m-d'),
+            'faturamento' => $faturamento,
+            'totalPedidos' => $totalPedidos,
+            'ticketMedio' => $ticketMedio,
+            'vendasPorDia' => $vendasPorDia,
+            'vendasPorFormaPagamento' => $vendasPorFormaPagamento
+        ]);
     }
 
     /**
@@ -71,8 +75,12 @@ class RelatorioController extends Controller
      */
     public function produtosMaisVendidos(Request $request)
     {
-        $dataInicio = $request->get('data_inicio', today()->startOfMonth());
-        $dataFim = $request->get('data_fim', today());
+        $dataInicio = $request->get('data_inicio')
+            ? \Carbon\Carbon::parse($request->get('data_inicio'))->startOfDay()
+            : today()->startOfMonth()->startOfDay();
+        $dataFim = $request->get('data_fim')
+            ? \Carbon\Carbon::parse($request->get('data_fim'))->endOfDay()
+            : today()->endOfDay();
 
         $produtos = PedidoItem::join('pedidos', 'pedido_itens.pedido_id', '=', 'pedidos.id')
             ->join('produtos', 'pedido_itens.produto_id', '=', 'produtos.id')
@@ -91,7 +99,11 @@ class RelatorioController extends Controller
             ->limit(20)
             ->get();
 
-        return view('relatorios.produtos', compact('dataInicio', 'dataFim', 'produtos'));
+        return view('relatorios.produtos', [
+            'dataInicio' => $dataInicio->format('Y-m-d'),
+            'dataFim' => $dataFim->format('Y-m-d'),
+            'produtos' => $produtos
+        ]);
     }
 
     /**
@@ -135,8 +147,12 @@ class RelatorioController extends Controller
      */
     public function desempenhoGarcons(Request $request)
     {
-        $dataInicio = $request->get('data_inicio', today()->startOfMonth());
-        $dataFim = $request->get('data_fim', today());
+        $dataInicio = $request->get('data_inicio')
+            ? \Carbon\Carbon::parse($request->get('data_inicio'))->startOfDay()
+            : today()->startOfMonth()->startOfDay();
+        $dataFim = $request->get('data_fim')
+            ? \Carbon\Carbon::parse($request->get('data_fim'))->endOfDay()
+            : today()->endOfDay();
 
         $garcons = DB::table('users')
             ->join('roles', 'users.role_id', '=', 'roles.id')
@@ -158,6 +174,10 @@ class RelatorioController extends Controller
             ->orderBy('faturamento', 'desc')
             ->get();
 
-        return view('relatorios.garcons', compact('dataInicio', 'dataFim', 'garcons'));
+        return view('relatorios.garcons', [
+            'dataInicio' => $dataInicio->format('Y-m-d'),
+            'dataFim' => $dataFim->format('Y-m-d'),
+            'garcons' => $garcons
+        ]);
     }
 }
