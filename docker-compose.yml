@@ -27,15 +27,17 @@ services:
     networks:
       - restaurante_network
 
-  # Nginx Web Server - PORTA 40123
+  # Nginx Web Server - PORTAS 40123 (HTTP) e 40443 (HTTPS)
   nginx:
     image: nginx:alpine
     container_name: restaurante_nginx
     restart: unless-stopped
     ports:
       - "40123:80"
+      - "40443:443"
     volumes:
       - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./docker/nginx/ssl:/etc/nginx/ssl:ro
       - ./public:/var/www/html/public:ro
     depends_on:
       - app
