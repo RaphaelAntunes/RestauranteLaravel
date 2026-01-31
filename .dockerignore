@@ -1,0 +1,67 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# IDE e Editores
+.idea
+.vscode
+*.swp
+*.swo
+*~
+
+# Arquivos de ambiente locais
+.env
+.env.local
+.env.*.local
+
+# Dependências (serão instaladas no build)
+/node_modules
+/vendor
+
+# Logs e Cache locais
+/storage/logs/*
+!/storage/logs/.gitkeep
+/storage/framework/cache/*
+!/storage/framework/cache/.gitkeep
+/storage/framework/sessions/*
+!/storage/framework/sessions/.gitkeep
+/storage/framework/views/*
+!/storage/framework/views/.gitkeep
+/bootstrap/cache/*
+!/bootstrap/cache/.gitkeep
+
+# Build artifacts
+/public/build
+/public/hot
+/public/storage
+
+# Testes
+/tests
+phpunit.xml
+.phpunit.result.cache
+
+# Documentação
+/docs
+*.md
+!README.md
+
+# Docker (não incluir no contexto para evitar loops)
+docker-compose*.yml
+Dockerfile*
+
+# Arquivos temporários
+*.log
+*.tmp
+tmpclaude-*
+nul
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Banco SQLite de desenvolvimento
+database/*.sqlite
+
+# Arquivos de lock de testes
+.phpunit.cache
