@@ -9,12 +9,30 @@ use Symfony\Component\HttpFoundation\Response;
 class CheckFacialObrigatorio
 {
     /**
+     * Rotas que devem ser ignoradas pelo middleware
+     */
+    protected array $except = [
+        'logout',
+        '/',
+        'login',
+        'login/*',
+        'face/login',
+        'face/login/*',
+        'cliente/*',
+    ];
+
+    /**
      * Handle an incoming request.
      *
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
     public function handle(Request $request, Closure $next): Response
     {
+        // Ignorar rotas públicas
+        if ($this->shouldSkip($request)) {
+            return $next($request);
+        }
+
         $user = $request->user();
 
         // Verificar se o usuário está autenticado
@@ -32,5 +50,18 @@ class CheckFacialObrigatorio
         }
 
         return $next($request);
+    }
+
+    /**
+     * Verifica se a rota deve ser ignorada
+     */
+    protected function shouldSkip(Request $request): bool
+    {
+        foreach ($this->except as $pattern) {
+            if ($request->is($pattern)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

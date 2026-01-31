@@ -37,6 +37,16 @@
                 </div>
 
                 <div>
+                    <label for="tipo" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Tipo *</label>
+                    <select name="tipo" id="tipo" required
+                        class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 dark:focus:ring-red-400 focus:border-transparent transition-colors">
+                        <option value="comida" {{ old('tipo', 'comida') == 'comida' ? 'selected' : '' }}>Comida</option>
+                        <option value="bebida" {{ old('tipo') == 'bebida' ? 'selected' : '' }}>Bebida</option>
+                    </select>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">Bebidas não aparecem no painel de Preparo da cozinha</p>
+                </div>
+
+                <div>
                     <label for="ordem" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Ordem de Exibição *</label>
                     <input type="number" name="ordem" id="ordem" value="{{ old('ordem', 1) }}" required min="1"
                         class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 dark:focus:ring-red-400 focus:border-transparent transition-colors">

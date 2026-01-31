@@ -14,7 +14,7 @@
 
     <!-- Legenda de Status -->
     <div class="bg-gray-800 rounded-xl shadow-sm border border-gray-700 p-4">
-        <div class="flex flex-wrap items-center justify-center gap-6 text-sm">
+        <div class="flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-sm">
             <div class="flex items-center space-x-2">
                 <div class="w-3 h-3 bg-green-500 rounded-full shadow-lg shadow-green-500/50"></div>
                 <span class="text-gray-300 font-medium">Disponível</span>
@@ -24,19 +24,72 @@
                 <span class="text-gray-300 font-medium">Ocupada</span>
             </div>
             <div class="flex items-center space-x-2">
-                <div class="w-3 h-3 bg-yellow-500 rounded-full shadow-lg shadow-yellow-500/50"></div>
-                <span class="text-gray-300 font-medium">Reservada</span>
+                <div class="w-3 h-3 bg-purple-500 rounded-full shadow-lg shadow-purple-500/50"></div>
+                <span class="text-gray-300 font-medium">Delivery</span>
             </div>
             <div class="flex items-center space-x-2">
-                <div class="w-3 h-3 bg-gray-500 rounded-full shadow-lg shadow-gray-500/50"></div>
-                <span class="text-gray-300 font-medium">Manutenção</span>
+                <div class="w-3 h-3 bg-indigo-500 rounded-full shadow-lg shadow-indigo-500/50"></div>
+                <span class="text-gray-300 font-medium">Retirada</span>
             </div>
         </div>
     </div>
 
-    <!-- Grid de Mesas -->
+    @php
+        $mesasNormais = $mesas->where('tipo', 'normal');
+        $mesasOnline = $mesas->whereIn('tipo', ['delivery', 'retirada']);
+    @endphp
+
+    <!-- Pedidos Online (Delivery/Retirada) -->
+    @if($mesasOnline->count() > 0)
+    <div class="bg-gradient-to-r from-purple-900/30 to-indigo-900/30 rounded-xl p-4 sm:p-6 border border-purple-700">
+        <h2 class="text-lg sm:text-xl font-bold text-white mb-4 flex items-center">
+            <svg class="w-5 h-5 sm:w-6 sm:h-6 mr-2 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            Pedidos Online ({{ $mesasOnline->count() }})
+        </h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            @foreach($mesasOnline as $mesa)
+            <div class="group bg-gray-800 rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border-2 cursor-pointer
+                {{ $mesa->tipo == 'delivery' ? 'border-purple-500' : 'border-indigo-500' }}"
+                onclick="showLoading('Abrindo comanda...'); window.location.href='{{ route('garcom.comanda', $mesa) }}'">
+
+                <div class="p-4 {{ $mesa->tipo == 'delivery' ? 'bg-gradient-to-br from-purple-600 to-purple-700' : 'bg-gradient-to-br from-indigo-600 to-indigo-700' }}">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <span class="text-xs font-bold text-white/80 uppercase tracking-wider">{{ $mesa->tipo == 'delivery' ? 'Delivery' : 'Retirada' }}</span>
+                            <h3 class="text-xl sm:text-2xl font-bold text-white">{{ $mesa->pedidoOnline ? $mesa->pedidoOnline->numero_pedido : '#' . $mesa->numero }}</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-4">
+                    @if($mesa->cliente_nome)
+                    <div class="flex items-center space-x-2 mb-2">
+                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                        </svg>
+                        <span class="font-semibold text-gray-300 text-sm truncate">{{ $mesa->cliente_nome }}</span>
+                    </div>
+                    @endif
+                    @if($mesa->pedidos_count > 0)
+                    <div class="flex items-center space-x-2 bg-red-900/30 p-2 rounded-lg border border-red-800">
+                        <svg class="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <span class="font-bold text-red-400 text-sm">{{ $mesa->pedidos_count }} pedido(s)</span>
+                    </div>
+                    @endif
+                </div>
+            </div>
+            @endforeach
+        </div>
+    </div>
+    @endif
+
+    <!-- Grid de Mesas Normais -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-        @forelse($mesas as $mesa)
+        @forelse($mesasNormais as $mesa)
         <div class="group bg-gray-800 rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-700 hover:border-
             {{-- Status border color --}}
             @if($mesa->status == 'disponivel') green-400

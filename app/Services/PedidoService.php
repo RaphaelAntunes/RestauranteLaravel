@@ -23,8 +23,15 @@ class PedidoService
                 throw new \Exception('Mesa não está disponível');
             }
 
+            // Gerar nova sessão para a mesa
+            if (!$mesa->sessao_atual) {
+                $mesa->sessao_atual = uniqid('sessao_', true);
+                $mesa->save();
+            }
+
             $pedido = Pedido::create([
                 'mesa_id' => $mesaId,
+                'sessao_id' => $mesa->sessao_atual,
                 'user_id' => $userId,
                 'numero_pedido' => $this->gerarNumeroPedido(),
                 'status' => 'aberto',

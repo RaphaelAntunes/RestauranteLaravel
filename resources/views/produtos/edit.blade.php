@@ -80,6 +80,13 @@
                         class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 dark:focus:ring-red-400 focus:border-transparent transition-colors file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-red-50 file:text-red-700 hover:file:bg-red-100 dark:file:bg-red-900/20 dark:file:text-red-400">
                 </div>
 
+                <div>
+                    <label for="ordem" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Ordem de Exibicao</label>
+                    <input type="number" name="ordem" id="ordem" value="{{ old('ordem', $produto->ordem) }}" min="0"
+                        class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 dark:focus:ring-red-400 focus:border-transparent transition-colors">
+                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Menor numero aparece primeiro no cardapio (0 = padrao)</p>
+                </div>
+
                 <div class="flex items-center space-x-6 pt-2">
                     <div class="flex items-center">
                         <input type="checkbox" name="ativo" id="ativo" value="1" {{ old('ativo', $produto->ativo) ? 'checked' : '' }}

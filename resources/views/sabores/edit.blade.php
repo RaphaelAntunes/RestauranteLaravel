@@ -65,6 +65,59 @@
             @enderror
         </div>
 
+        <!-- Preços Especiais -->
+        <div class="border border-yellow-500/30 rounded-lg p-4 bg-yellow-500/5">
+            <div class="flex items-center gap-2 mb-4">
+                <svg class="w-5 h-5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <span class="text-sm font-medium text-yellow-500">Precos Especiais (opcional)</span>
+            </div>
+            <p class="text-xs text-gray-400 mb-4">Deixe em branco para usar o preco padrao do tamanho. Preencha apenas se este sabor tiver preco diferenciado (ex: Carne de Sol, Palmito).</p>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div>
+                    <label for="preco_p" class="block text-sm font-medium text-gray-100 mb-2">Pequena (P)</label>
+                    <div class="relative">
+                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">R$</span>
+                        <input type="number" name="preco_p" id="preco_p" value="{{ old('preco_p', $sabor->preco_p) }}" step="0.01" min="0" class="w-full pl-10 pr-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-100 focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition" placeholder="0,00">
+                    </div>
+                    @error('preco_p')
+                        <p class="mt-1 text-sm text-red-400">{{ $message }}</p>
+                    @enderror
+                </div>
+                <div>
+                    <label for="preco_m" class="block text-sm font-medium text-gray-100 mb-2">Media (M)</label>
+                    <div class="relative">
+                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">R$</span>
+                        <input type="number" name="preco_m" id="preco_m" value="{{ old('preco_m', $sabor->preco_m) }}" step="0.01" min="0" class="w-full pl-10 pr-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-100 focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition" placeholder="0,00">
+                    </div>
+                    @error('preco_m')
+                        <p class="mt-1 text-sm text-red-400">{{ $message }}</p>
+                    @enderror
+                </div>
+                <div>
+                    <label for="preco_g" class="block text-sm font-medium text-gray-100 mb-2">Grande (G)</label>
+                    <div class="relative">
+                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">R$</span>
+                        <input type="number" name="preco_g" id="preco_g" value="{{ old('preco_g', $sabor->preco_g) }}" step="0.01" min="0" class="w-full pl-10 pr-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-100 focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition" placeholder="0,00">
+                    </div>
+                    @error('preco_g')
+                        <p class="mt-1 text-sm text-red-400">{{ $message }}</p>
+                    @enderror
+                </div>
+                <div>
+                    <label for="preco_gg" class="block text-sm font-medium text-gray-100 mb-2">Gigante (GG)</label>
+                    <div class="relative">
+                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">R$</span>
+                        <input type="number" name="preco_gg" id="preco_gg" value="{{ old('preco_gg', $sabor->preco_gg) }}" step="0.01" min="0" class="w-full pl-10 pr-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-100 focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition" placeholder="0,00">
+                    </div>
+                    @error('preco_gg')
+                        <p class="mt-1 text-sm text-red-400">{{ $message }}</p>
+                    @enderror
+                </div>
+            </div>
+        </div>
+
         <!-- Imagem Atual -->
         @if($sabor->imagem)
         <div>

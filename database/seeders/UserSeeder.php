@@ -12,8 +12,8 @@ class UserSeeder extends Seeder
     {
         User::create([
             'nome' => 'Administrador',
-            'email' => 'admin@restaurante.com',
-            'senha' => Hash::make('admin123'),
+            'email' => 'admin@superpizza.com',
+            'senha' => Hash::make('admin@superpizza.com'),
             'role_id' => 1,
             'ativo' => true,
         ]);

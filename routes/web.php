@@ -12,14 +12,72 @@ use App\Http\Controllers\MesaController;
 use App\Http\Controllers\PedidoController;
 use App\Http\Controllers\PDVController;
 use App\Http\Controllers\CozinhaController;
+use App\Http\Controllers\PreparoController;
 use App\Http\Controllers\RelatorioController;
 use App\Http\Controllers\GarcomManagementController;
 use App\Http\Controllers\GarcomController;
 use App\Http\Controllers\FaceAuthController;
+use App\Http\Controllers\Cliente\ClienteAuthController;
+use App\Http\Controllers\Cliente\CardapioController;
+use App\Http\Controllers\Cliente\CarrinhoController;
+use App\Http\Controllers\Cliente\PedidoOnlineController;
+use App\Http\Controllers\Cliente\ClienteEnderecoController;
+use App\Http\Controllers\Admin\PedidoOnlineAdminController;
+use App\Http\Controllers\Admin\ConfiguracaoDeliveryController;
 
 /*
 |--------------------------------------------------------------------------
-| Rotas de Autenticação (Públicas)
+| Rotas de Clientes (Sistema de Pedidos Online)
+|--------------------------------------------------------------------------
+*/
+Route::prefix('cliente')->name('cliente.')->group(function () {
+
+    // Rotas para visitantes (guest)
+    Route::middleware('cliente.guest')->group(function () {
+        Route::get('/login', [ClienteAuthController::class, 'showLoginForm'])->name('login');
+        Route::post('/login/otp', [ClienteAuthController::class, 'enviarOtp'])->name('otp.enviar');
+        Route::get('/login/verificar', [ClienteAuthController::class, 'showVerificarOtpForm'])->name('otp.form');
+        Route::post('/login/verificar', [ClienteAuthController::class, 'verificarOtp'])->name('otp.verificar');
+    });
+
+    // Cardápio público (sem auth)
+    Route::get('/cardapio', [CardapioController::class, 'index'])->name('cardapio');
+    Route::get('/cardapio/{produto}', [CardapioController::class, 'show'])->name('cardapio.show');
+
+    // Carrinho público (funciona para visitantes e logados)
+    Route::post('/carrinho/adicionar', [CarrinhoController::class, 'adicionar'])->name('carrinho.adicionar.publico');
+    Route::get('/carrinho/info', [CarrinhoController::class, 'getCartInfo'])->name('carrinho.info');
+    Route::get('/carrinho/data', [CarrinhoController::class, 'getCartData'])->name('carrinho.data');
+
+    // Rotas autenticadas
+    Route::middleware('cliente.auth')->group(function () {
+        Route::post('/logout', [ClienteAuthController::class, 'logout'])->name('logout');
+
+        // Carrinho
+        Route::prefix('carrinho')->name('carrinho.')->group(function () {
+            Route::get('/', [CarrinhoController::class, 'index'])->name('index');
+            Route::put('/{item}', [CarrinhoController::class, 'atualizar'])->name('atualizar');
+            Route::delete('/{item}', [CarrinhoController::class, 'remover'])->name('remover');
+            Route::delete('/', [CarrinhoController::class, 'limpar'])->name('limpar');
+        });
+
+        // Pedidos
+        Route::get('/checkout', [PedidoOnlineController::class, 'checkout'])->name('checkout');
+        Route::get('/checkout/data', [PedidoOnlineController::class, 'getCheckoutData'])->name('checkout.data');
+        Route::post('/pedido/finalizar', [PedidoOnlineController::class, 'finalizarPedido'])->name('pedido.finalizar');
+        Route::get('/pedidos', [PedidoOnlineController::class, 'meusPedidos'])->name('pedidos');
+        Route::get('/pedido/{pedido}/acompanhar', [PedidoOnlineController::class, 'acompanhar'])->name('pedido.acompanhar');
+        Route::get('/pedido/{pedido}/status', [PedidoOnlineController::class, 'getStatusPedido'])->name('pedido.status');
+
+        // Endereços
+        Route::resource('enderecos', ClienteEnderecoController::class);
+        Route::post('/enderecos/{endereco}/padrao', [ClienteEnderecoController::class, 'marcarPadrao'])->name('enderecos.padrao');
+    });
+});
+
+/*
+|--------------------------------------------------------------------------
+| Rotas de Autenticação (Públicas - Funcionários)
 |--------------------------------------------------------------------------
 */
 Route::middleware('guest')->group(function () {
@@ -77,6 +135,10 @@ Route::middleware('auth')->group(function () {
     Route::resource('pedidos', PedidoController::class);
     Route::post('/pedidos/{pedido}/status', [PedidoController::class, 'updateStatus'])->name('pedidos.status');
 
+    // Ações administrativas de pedidos (apenas Admin)
+    Route::post('/pedidos/{pedido}/invalidar', [PedidoController::class, 'invalidar'])->name('pedidos.invalidar')->middleware('role:admin');
+    Route::post('/pedidos/{pedido}/alterar-data', [PedidoController::class, 'alterarData'])->name('pedidos.alterarData')->middleware('role:admin');
+
     /*
     |--------------------------------------------------------------------------
     | Interface do Garçom (Simplificada)
@@ -106,6 +168,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/comprovante/{pagamento}', [PDVController::class, 'comprovante'])->name('comprovante');
         Route::get('/comprovante/{pagamento}/imprimir', [PDVController::class, 'imprimirComprovante'])->name('comprovante.imprimir');
         Route::get('/historico', [PDVController::class, 'historico'])->name('historico');
+        Route::get('/gorjetas', [PDVController::class, 'relatorioGorjetas'])->name('gorjetas');
     });
 
     /*
@@ -118,7 +181,18 @@ Route::middleware('auth')->group(function () {
         Route::post('/pedido/{pedido}/iniciar', [CozinhaController::class, 'iniciarPreparo'])->name('iniciar');
         Route::post('/pedido/{pedido}/pronto', [CozinhaController::class, 'marcarPronto'])->name('pronto');
         Route::post('/pedido/{pedido}/entregar', [CozinhaController::class, 'entregar'])->name('entregar');
+        Route::post('/pedido/{pedido}/entregue', [CozinhaController::class, 'marcarEntregue'])->name('entregue');
         Route::get('/atualizar', [CozinhaController::class, 'atualizar'])->name('atualizar');
+    });
+
+    /*
+    |--------------------------------------------------------------------------
+    | Painel de Preparo (Apenas Comidas - Sem Bebidas)
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('preparo')->name('preparo.')->group(function () {
+        Route::get('/', [PreparoController::class, 'index'])->name('index');
+        Route::get('/atualizar', [PreparoController::class, 'atualizar'])->name('atualizar');
     });
 
     /*
@@ -148,5 +222,32 @@ Route::middleware('auth')->group(function () {
         Route::get('/produtos', [RelatorioController::class, 'produtosMaisVendidos'])->name('produtos');
         Route::get('/faturamento', [RelatorioController::class, 'faturamentoMensal'])->name('faturamento');
         Route::get('/garcons', [RelatorioController::class, 'desempenhoGarcons'])->name('garcons');
+    });
+
+    /*
+    |--------------------------------------------------------------------------
+    | Gestão de Pedidos Online (Admin e Caixa)
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('admin/pedidos-online')->name('admin.pedidos-online.')->middleware('role:admin,caixa')->group(function () {
+        Route::get('/', [PedidoOnlineAdminController::class, 'index'])->name('index');
+        Route::get('/{pedido}', [PedidoOnlineAdminController::class, 'show'])->name('show');
+        Route::post('/{pedido}/status', [PedidoOnlineAdminController::class, 'atualizarStatus'])->name('status');
+        Route::put('/{pedido}', [PedidoOnlineAdminController::class, 'atualizar'])->name('atualizar');
+
+        // Gerenciar itens
+        Route::post('/{pedido}/itens', [PedidoOnlineAdminController::class, 'adicionarItem'])->name('adicionar-item');
+        Route::put('/itens/{item}', [PedidoOnlineAdminController::class, 'atualizarItem'])->name('atualizar-item');
+        Route::delete('/itens/{item}', [PedidoOnlineAdminController::class, 'removerItem'])->name('remover-item');
+    });
+
+    /*
+    |--------------------------------------------------------------------------
+    | Configurações de Delivery (Apenas Admin)
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('admin/configuracoes-delivery')->name('admin.configuracoes-delivery.')->middleware('role:admin')->group(function () {
+        Route::get('/', [ConfiguracaoDeliveryController::class, 'edit'])->name('edit');
+        Route::put('/', [ConfiguracaoDeliveryController::class, 'update'])->name('update');
     });
 });

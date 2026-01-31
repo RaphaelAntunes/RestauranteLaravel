@@ -10,12 +10,29 @@ use Symfony\Component\HttpFoundation\Response;
 class CheckUserActive
 {
     /**
+     * Rotas que devem ser ignoradas pelo middleware
+     */
+    protected array $except = [
+        '/',
+        'login',
+        'login/*',
+        'face/login',
+        'face/login/*',
+        'cliente/*',
+    ];
+
+    /**
      * Handle an incoming request.
      *
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
     public function handle(Request $request, Closure $next): Response
     {
+        // Ignorar rotas públicas
+        if ($this->shouldSkip($request)) {
+            return $next($request);
+        }
+
         if (Auth::check() && !Auth::user()->ativo) {
             Auth::logout();
             $request->session()->invalidate();
@@ -26,5 +43,18 @@ class CheckUserActive
         }
 
         return $next($request);
+    }
+
+    /**
+     * Verifica se a rota deve ser ignorada
+     */
+    protected function shouldSkip(Request $request): bool
+    {
+        foreach ($this->except as $pattern) {
+            if ($request->is($pattern)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

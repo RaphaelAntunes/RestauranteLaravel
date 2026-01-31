@@ -31,6 +31,10 @@ class SaborController extends Controller
             'nome' => 'required|string|max:255',
             'descricao' => 'nullable|string',
             'ingredientes' => 'nullable|string',
+            'preco_p' => 'nullable|numeric|min:0',
+            'preco_m' => 'nullable|numeric|min:0',
+            'preco_g' => 'nullable|numeric|min:0',
+            'preco_gg' => 'nullable|numeric|min:0',
             'imagem' => 'nullable|image|max:2048',
             'ativo' => 'boolean',
             'ordem' => 'nullable|integer',
@@ -42,6 +46,13 @@ class SaborController extends Controller
 
         $validated['ativo'] = $request->has('ativo');
         $validated['ordem'] = $validated['ordem'] ?? 0;
+
+        // Converter valores vazios para null nos campos de preço
+        foreach (['preco_p', 'preco_m', 'preco_g', 'preco_gg'] as $campo) {
+            if (isset($validated[$campo]) && $validated[$campo] === '') {
+                $validated[$campo] = null;
+            }
+        }
 
         Sabor::create($validated);
 
@@ -62,6 +73,10 @@ class SaborController extends Controller
             'nome' => 'required|string|max:255',
             'descricao' => 'nullable|string',
             'ingredientes' => 'nullable|string',
+            'preco_p' => 'nullable|numeric|min:0',
+            'preco_m' => 'nullable|numeric|min:0',
+            'preco_g' => 'nullable|numeric|min:0',
+            'preco_gg' => 'nullable|numeric|min:0',
             'imagem' => 'nullable|image|max:2048',
             'ativo' => 'boolean',
             'ordem' => 'nullable|integer',
@@ -77,6 +92,13 @@ class SaborController extends Controller
 
         $validated['ativo'] = $request->has('ativo');
         $validated['ordem'] = $validated['ordem'] ?? 0;
+
+        // Converter valores vazios para null nos campos de preço
+        foreach (['preco_p', 'preco_m', 'preco_g', 'preco_gg'] as $campo) {
+            if (isset($validated[$campo]) && $validated[$campo] === '') {
+                $validated[$campo] = null;
+            }
+        }
 
         $sabor->update($validated);
 

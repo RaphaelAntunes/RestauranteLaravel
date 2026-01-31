@@ -14,21 +14,38 @@ class Pedido extends Model
 
     protected $fillable = [
         'mesa_id',
+        'sessao_id',
         'user_id',
+        'cliente_id',
+        'tipo_pedido',
+        'cliente_endereco_id',
         'numero_pedido',
         'status',
         'total',
+        'taxa_entrega',
         'observacoes',
+        'observacoes_entrega',
         'data_abertura',
+        'em_preparo_at',
+        'pronto_at',
+        'saiu_entrega_at',
+        'entregue_at',
         'data_finalizacao',
+        'previsao_entrega',
     ];
 
     protected function casts(): array
     {
         return [
             'total' => 'decimal:2',
+            'taxa_entrega' => 'decimal:2',
             'data_abertura' => 'datetime',
+            'em_preparo_at' => 'datetime',
+            'pronto_at' => 'datetime',
+            'saiu_entrega_at' => 'datetime',
+            'entregue_at' => 'datetime',
             'data_finalizacao' => 'datetime',
+            'previsao_entrega' => 'datetime',
         ];
     }
 
@@ -50,6 +67,16 @@ class Pedido extends Model
     public function pagamento(): HasOne
     {
         return $this->hasOne(Pagamento::class);
+    }
+
+    public function cliente(): BelongsTo
+    {
+        return $this->belongsTo(Cliente::class);
+    }
+
+    public function clienteEndereco(): BelongsTo
+    {
+        return $this->belongsTo(ClienteEndereco::class);
     }
 
     public function scopeAbertos($query)
@@ -96,5 +123,35 @@ class Pedido extends Model
     public function getTotalFormatadoAttribute(): string
     {
         return 'R$ ' . number_format($this->total, 2, ',', '.');
+    }
+
+    public function isOnline(): bool
+    {
+        return $this->tipo_pedido !== 'mesa';
+    }
+
+    public function isDelivery(): bool
+    {
+        return $this->tipo_pedido === 'delivery';
+    }
+
+    public function isRetirada(): bool
+    {
+        return $this->tipo_pedido === 'retirada';
+    }
+
+    public function getTotalComTaxa(): float
+    {
+        return $this->total + $this->taxa_entrega;
+    }
+
+    public function scopeOnline($query)
+    {
+        return $query->whereIn('tipo_pedido', ['delivery', 'retirada']);
+    }
+
+    public function scopeDelivery($query)
+    {
+        return $query->where('tipo_pedido', 'delivery');
     }
 }

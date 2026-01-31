@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Mesa;
 use App\Models\Pedido;
 use Illuminate\Http\Request;
 
@@ -31,7 +32,14 @@ class CozinhaController extends Controller
             ->limit(10)
             ->get();
 
-        return view('cozinha.index', compact('pedidosEmPreparo', 'novosPedidos', 'pedidosProntos'));
+        // Pedidos saiu para entrega
+        $pedidosSaiuEntrega = Pedido::with(['mesa', 'itens.produto', 'itens.produtoTamanho', 'itens.sabores.sabor'])
+            ->where('status', 'saiu_entrega')
+            ->orderBy('updated_at', 'desc')
+            ->limit(10)
+            ->get();
+
+        return view('cozinha.index', compact('pedidosEmPreparo', 'novosPedidos', 'pedidosProntos', 'pedidosSaiuEntrega'));
     }
 
     /**
@@ -46,7 +54,16 @@ class CozinhaController extends Controller
             ], 400);
         }
 
-        $pedido->update(['status' => 'em_preparo']);
+        // Se for pedido online e não tiver mesa vinculada, cria mesa virtual
+        if ($pedido->isOnline() && !$pedido->mesa_id) {
+            Mesa::criarParaPedidoOnline($pedido);
+            $pedido->refresh();
+        }
+
+        $pedido->update([
+            'status' => 'em_preparo',
+            'em_preparo_at' => now()
+        ]);
 
         return response()->json([
             'success' => true,
@@ -67,7 +84,10 @@ class CozinhaController extends Controller
             ], 400);
         }
 
-        $pedido->update(['status' => 'pronto']);
+        $pedido->update([
+            'status' => 'pronto',
+            'pronto_at' => now()
+        ]);
 
         return response()->json([
             'success' => true,
@@ -77,7 +97,7 @@ class CozinhaController extends Controller
     }
 
     /**
-     * Entrega o pedido (marca como entregue)
+     * Marca pedido como saiu para entrega
      */
     public function entregar(Pedido $pedido)
     {
@@ -88,7 +108,35 @@ class CozinhaController extends Controller
             ], 400);
         }
 
-        $pedido->update(['status' => 'entregue']);
+        $pedido->update([
+            'status' => 'saiu_entrega',
+            'saiu_entrega_at' => now()
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Pedido saiu para entrega!',
+            'pedido' => $pedido
+        ]);
+    }
+
+    /**
+     * Marca pedido como entregue
+     */
+    public function marcarEntregue(Pedido $pedido)
+    {
+        if ($pedido->status != 'saiu_entrega') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Este pedido não saiu para entrega.'
+            ], 400);
+        }
+
+        $pedido->update([
+            'status' => 'entregue',
+            'entregue_at' => now(),
+            'data_finalizacao' => now()
+        ]);
 
         return response()->json([
             'success' => true,
@@ -118,6 +166,12 @@ class CozinhaController extends Controller
             ->limit(10)
             ->get();
 
+        $pedidosSaiuEntrega = Pedido::with(['mesa', 'itens.produto', 'itens.produtoTamanho', 'itens.sabores.sabor'])
+            ->where('status', 'saiu_entrega')
+            ->orderBy('updated_at', 'desc')
+            ->limit(10)
+            ->get();
+
         // Renderizar HTML dos pedidos
         $htmlNovos = '';
         foreach ($novosPedidos as $pedido) {
@@ -134,13 +188,20 @@ class CozinhaController extends Controller
             $htmlProntos .= view('cozinha.partials.pedido-card', ['pedido' => $pedido, 'tipo' => 'pronto'])->render();
         }
 
+        $htmlSaiuEntrega = '';
+        foreach ($pedidosSaiuEntrega as $pedido) {
+            $htmlSaiuEntrega .= view('cozinha.partials.pedido-card', ['pedido' => $pedido, 'tipo' => 'saiu_entrega'])->render();
+        }
+
         $data = [
             'novos' => $novosPedidos,
             'em_preparo' => $pedidosEmPreparo,
             'prontos' => $pedidosProntos,
+            'saiu_entrega' => $pedidosSaiuEntrega,
             'html_novos' => $htmlNovos,
             'html_preparo' => $htmlPreparo,
             'html_prontos' => $htmlProntos,
+            'html_saiu_entrega' => $htmlSaiuEntrega,
         ];
 
         return response()->json($data);

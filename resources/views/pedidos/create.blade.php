@@ -42,7 +42,7 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                             @foreach($items as $produto)
                                 <div class="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-700 rounded-lg p-3 hover:border-red-500 dark:hover:border-red-500 cursor-pointer transition-colors"
-                                     onclick="@if($produto->tamanhos->count() > 0) abrirModalPizza({{ $produto->id }}, '{{ $produto->nome }}', {{ $produto->tamanhos }}) @else adicionarProduto({{ $produto->id }}, '{{ $produto->nome }}', {{ $produto->preco }}) @endif">
+                                     onclick="@if($produto->tamanhos->count() > 0) abrirModalPizza({{ $produto->id }}, '{{ $produto->nome }}', {{ $produto->tamanhos }}, '{{ addslashes($categoria) }}') @else adicionarProduto({{ $produto->id }}, '{{ $produto->nome }}', {{ $produto->preco }}) @endif">
                                     <div class="flex justify-between items-start">
                                         <div class="flex-1">
                                             <p class="font-medium text-gray-900 dark:text-white">{{ $produto->nome }}</p>
@@ -160,6 +160,7 @@ let itemIndex = 0;
 let pizzaAtual = {
     produtoId: null,
     produtoNome: null,
+    categoria: null,
     tamanhos: [],
     tamanhoSelecionado: null,
     saboresSelecionados: []
@@ -183,10 +184,11 @@ function adicionarProduto(id, nome, preco) {
     atualizarTotal();
 }
 
-function abrirModalPizza(id, nome, tamanhos) {
+function abrirModalPizza(id, nome, tamanhos, categoria) {
     pizzaAtual = {
         produtoId: id,
         produtoNome: nome,
+        categoria: categoria,
         tamanhos: tamanhos,
         tamanhoSelecionado: null,
         saboresSelecionados: []
@@ -235,12 +237,25 @@ function renderizarSabores() {
     const container = document.getElementById('sabores-container');
     const tamanhoNome = pizzaAtual.tamanhoSelecionado.nome.toLowerCase();
     const campoPreco = `preco_${tamanhoNome}`;
+    const categoriaProduto = pizzaAtual.categoria;
+
+    // Filtrar categorias de sabores baseado no tipo de pizza
+    // Pizza Doce -> só mostra sabores de "Pizzas Doces"
+    // Pizza Salgada -> mostra sabores de "Pizzas" e "Pizzas Doces"
+    const isPizzaDoce = categoriaProduto && categoriaProduto.toLowerCase().includes('doce');
 
     let html = '';
-    for (const [categoria, sabores] of Object.entries(saboresDisponiveis)) {
+    for (const [categoriaSabor, sabores] of Object.entries(saboresDisponiveis)) {
+        // Se for pizza doce, só mostrar sabores doces
+        if (isPizzaDoce) {
+            if (!categoriaSabor.toLowerCase().includes('doce')) {
+                continue; // Pular categorias que não são doces
+            }
+        }
+
         html += `
             <div>
-                <h5 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">${categoria}</h5>
+                <h5 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">${categoriaSabor}</h5>
                 <div class="grid grid-cols-1 gap-2">
         `;
 

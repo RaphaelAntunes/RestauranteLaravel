@@ -16,7 +16,7 @@ class PedidoController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Pedido::with(['mesa', 'user']);
+        $query = Pedido::with(['mesa', 'user', 'itens.produto', 'itens.produtoTamanho', 'itens.sabores.sabor']);
 
         // Filtro por data inicial
         if ($request->filled('data_inicio')) {
@@ -41,10 +41,12 @@ class PedidoController extends Controller
     public function create()
     {
         $mesas = Mesa::where('status', 'disponivel')->where('ativo', true)->orderBy('numero')->get();
+        // Ordenar por ordem (menor primeiro) e depois por nome
         $produtosTemp = Produto::with(['categoria', 'tamanhos' => function($query) {
                 $query->where('ativo', true)->orderBy('ordem');
             }])
             ->where('ativo', true)
+            ->orderBy('ordem')
             ->orderBy('nome')
             ->get()
             ->groupBy('categoria.nome');
@@ -66,10 +68,13 @@ class PedidoController extends Controller
             }
         }
 
+        // Ordenar: especiais primeiro (que têm preços definidos), depois por ordem e nome
         $sabores = Sabor::with('categoria')
             ->where('ativo', true)
             ->orderBy('categoria_id')
+            ->orderByRaw('CASE WHEN preco_p IS NOT NULL OR preco_m IS NOT NULL OR preco_g IS NOT NULL OR preco_gg IS NOT NULL THEN 0 ELSE 1 END')
             ->orderBy('ordem')
+            ->orderBy('nome')
             ->get()
             ->groupBy('categoria.nome');
 
@@ -106,7 +111,8 @@ class PedidoController extends Controller
             if (!$mesa->sessao_atual || $mesa->status == 'disponivel') {
                 // Se não tem sessão ou mesa está disponível, gerar nova sessão
                 $novaSessao = uniqid('sessao_', true);
-                $mesa->update(['sessao_atual' => $novaSessao]);
+                $mesa->sessao_atual = $novaSessao;
+                $mesa->save();
             }
 
             // Gerar número do pedido
@@ -211,7 +217,7 @@ class PedidoController extends Controller
 
     public function show(Pedido $pedido)
     {
-        $pedido->load(['mesa', 'user', 'itens.produto.categoria']);
+        $pedido->load(['mesa', 'user', 'itens.produto.categoria', 'itens.produtoTamanho', 'itens.sabores.sabor']);
         return view('pedidos.show', compact('pedido'));
     }
 
@@ -337,6 +343,137 @@ class PedidoController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'Erro ao excluir pedido: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Invalidar (cancelar) pedido - Remove do faturamento
+     */
+    public function invalidar(Request $request, Pedido $pedido)
+    {
+        // Verificar se usuário é admin
+        if (!auth()->user()->isAdmin()) {
+            return response()->json(['error' => 'Apenas administradores podem invalidar pedidos.'], 403);
+        }
+
+        DB::beginTransaction();
+        try {
+            $motivoAnterior = $pedido->observacoes;
+            $motivo = $request->input('motivo', 'Pedido invalidado pelo administrador');
+
+            // Atualizar status para cancelado
+            $pedido->update([
+                'status' => 'cancelado',
+                'observacoes' => $motivoAnterior
+                    ? $motivoAnterior . "\n\n[INVALIDADO] " . $motivo
+                    : "[INVALIDADO] " . $motivo,
+            ]);
+
+            // Buscar pagamento associado através de pagamento_detalhes
+            $pagamentoIds = DB::table('pagamento_detalhes')
+                ->where('pedido_id', $pedido->id)
+                ->pluck('pagamento_id')
+                ->unique();
+
+            // Invalidar todos os pagamentos associados
+            if ($pagamentoIds->isNotEmpty()) {
+                foreach ($pagamentoIds as $pagamentoId) {
+                    $pagamento = \App\Models\Pagamento::find($pagamentoId);
+                    if ($pagamento) {
+                        $pagamento->status = 'cancelado';
+                        $pagamento->observacoes = ($pagamento->observacoes ?? '') . "\n[INVALIDADO] Pedido {$pedido->numero_pedido} cancelado: " . $motivo;
+                        $pagamento->save();
+                    }
+                }
+            }
+
+            // Verificar se precisa liberar a mesa
+            $pedidosAtivos = Pedido::where('mesa_id', $pedido->mesa_id)
+                ->where('id', '!=', $pedido->id)
+                ->whereIn('status', ['aberto', 'em_preparo', 'pronto', 'entregue'])
+                ->count();
+
+            if ($pedidosAtivos == 0 && $pedido->mesa) {
+                $pedido->mesa->update(['status' => 'disponivel']);
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Pedido invalidado com sucesso!'
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['error' => 'Erro ao invalidar pedido: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Alterar data do pedido - Muda a data de contabilização
+     */
+    public function alterarData(Request $request, Pedido $pedido)
+    {
+        // Verificar se usuário é admin
+        if (!auth()->user()->isAdmin()) {
+            return response()->json(['error' => 'Apenas administradores podem alterar a data de pedidos.'], 403);
+        }
+
+        $validated = $request->validate([
+            'nova_data' => 'required|date',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            $dataOriginal = $pedido->created_at->format('d/m/Y H:i');
+            $novaData = \Carbon\Carbon::parse($validated['nova_data']);
+
+            // Manter o horário original, apenas alterar a data
+            $novaDataCompleta = $novaData->setTime(
+                $pedido->created_at->hour,
+                $pedido->created_at->minute,
+                $pedido->created_at->second
+            );
+
+            // Registrar alteração nas observações
+            $observacaoAnterior = $pedido->observacoes;
+            $novaObservacao = "[DATA ALTERADA] De {$dataOriginal} para {$novaDataCompleta->format('d/m/Y H:i')} por " . auth()->user()->nome;
+
+            $pedido->update([
+                'created_at' => $novaDataCompleta,
+                'observacoes' => $observacaoAnterior
+                    ? $observacaoAnterior . "\n\n" . $novaObservacao
+                    : $novaObservacao,
+            ]);
+
+            // Buscar pagamento associado através de pagamento_detalhes e alterar a data
+            $pagamentoIds = DB::table('pagamento_detalhes')
+                ->where('pedido_id', $pedido->id)
+                ->pluck('pagamento_id')
+                ->unique();
+
+            if ($pagamentoIds->isNotEmpty()) {
+                foreach ($pagamentoIds as $pagamentoId) {
+                    $pagamento = \App\Models\Pagamento::find($pagamentoId);
+                    if ($pagamento) {
+                        $pagamento->created_at = $novaDataCompleta;
+                        $pagamento->save();
+                    }
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Data do pedido alterada com sucesso!',
+                'nova_data' => $novaDataCompleta->format('d/m/Y H:i')
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['error' => 'Erro ao alterar data: ' . $e->getMessage()], 500);
         }
     }
 }

@@ -35,6 +35,7 @@ class ProdutoController extends Controller
             'imagem' => 'nullable|image|max:2048',
             'ativo' => 'boolean',
             'destaque' => 'boolean',
+            'ordem' => 'nullable|integer|min:0',
         ], [
             'categoria_id.required' => 'A categoria é obrigatória',
             'nome.required' => 'O nome é obrigatório',
@@ -45,6 +46,8 @@ class ProdutoController extends Controller
         if ($request->hasFile('imagem')) {
             $validated['imagem'] = $request->file('imagem')->store('produtos', 'public');
         }
+
+        $validated['ordem'] = $validated['ordem'] ?? 0;
 
         Produto::create($validated);
 
@@ -75,6 +78,7 @@ class ProdutoController extends Controller
             'imagem' => 'nullable|image|max:2048',
             'ativo' => 'boolean',
             'destaque' => 'boolean',
+            'ordem' => 'nullable|integer|min:0',
         ]);
 
         if ($request->hasFile('imagem')) {
@@ -84,6 +88,8 @@ class ProdutoController extends Controller
             }
             $validated['imagem'] = $request->file('imagem')->store('produtos', 'public');
         }
+
+        $validated['ordem'] = $validated['ordem'] ?? 0;
 
         $produto->update($validated);
 

@@ -13,6 +13,8 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'role' => \App\Http\Middleware\CheckRole::class,
+            'cliente.auth' => \App\Http\Middleware\ClienteAuth::class,
+            'cliente.guest' => \App\Http\Middleware\ClienteGuest::class,
         ]);
 
         // Verificar se usuário está ativo em todas as requisições web

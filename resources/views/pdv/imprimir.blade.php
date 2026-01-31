@@ -273,6 +273,12 @@
             <span>+ R$ {{ number_format($pagamento->valor_acrescimo, 2, ',', '.') }}</span>
         </div>
         @endif
+        @if($pagamento->taxa_servico_aplicada && $pagamento->valor_taxa_servico > 0)
+        <div class="total-row desconto">
+            <span>Taxa Serviço (10%):</span>
+            <span>+ R$ {{ number_format($pagamento->valor_taxa_servico, 2, ',', '.') }}</span>
+        </div>
+        @endif
         <div class="total-row total-final">
             <span>TOTAL:</span>
             <span>R$ {{ number_format($pagamento->total, 2, ',', '.') }}</span>

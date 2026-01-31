@@ -13,7 +13,7 @@
         <div class="grid grid-cols-2 gap-4 mb-6">
             <div>
                 <p class="text-sm text-gray-400">Mesa</p>
-                <p class="font-semibold text-gray-100">Mesa {{ $pedido->mesa->numero }}</p>
+                <p class="font-semibold text-gray-100">{{ $pedido->mesa ? 'Mesa ' . $pedido->mesa->numero : 'Delivery' }}</p>
             </div>
             <div>
                 <p class="text-sm text-gray-400">Garçom</p>
@@ -56,9 +56,21 @@
                 @foreach($pedido->itens as $item)
                 <tr class="hover:border-red-500 transition-colors">
                     <td class="px-4 py-3">
-                        <p class="font-medium text-gray-100">{{ $item->produto->nome }}</p>
+                        <p class="font-medium text-gray-100">
+                            {{ $item->produto->nome }}
+                            @if($item->produtoTamanho)
+                                <span class="text-orange-400 font-semibold">({{ $item->produtoTamanho->nome }})</span>
+                            @endif
+                        </p>
+                        @if($item->sabores && $item->sabores->count() > 0)
+                        <p class="text-xs text-blue-400 mt-1">
+                            <span class="font-semibold">Sabores:</span> {{ $item->sabores->pluck('sabor.nome')->filter()->join(', ') }}
+                        </p>
+                        @endif
                         @if($item->observacoes)
-                        <p class="text-xs text-red-400">OBS: {{ $item->observacoes }}</p>
+                        <p class="text-xs text-yellow-400 mt-1">
+                            <span class="font-semibold">OBS:</span> {{ $item->observacoes }}
+                        </p>
                         @endif
                     </td>
                     <td class="px-4 py-3 text-center text-gray-200">{{ $item->quantidade }}</td>

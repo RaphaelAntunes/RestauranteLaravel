@@ -12,6 +12,7 @@ class Categoria extends Model
 
     protected $fillable = [
         'nome',
+        'tipo',
         'descricao',
         'ordem',
         'ativo',
@@ -43,5 +44,25 @@ class Categoria extends Model
     public function scopeOrdenadas($query)
     {
         return $query->orderBy('ordem');
+    }
+
+    public function scopeComidas($query)
+    {
+        return $query->where('tipo', 'comida');
+    }
+
+    public function scopeBebidas($query)
+    {
+        return $query->where('tipo', 'bebida');
+    }
+
+    public function isComida(): bool
+    {
+        return $this->tipo === 'comida';
+    }
+
+    public function isBebida(): bool
+    {
+        return $this->tipo === 'bebida';
     }
 }

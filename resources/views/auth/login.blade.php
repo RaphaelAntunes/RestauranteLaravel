@@ -118,12 +118,6 @@
                 Login com Reconhecimento Facial
             </a>
 
-            <!-- Credenciais Padrão (apenas para desenvolvimento) -->
-            <div class="mt-8 p-4 bg-gray-50 rounded-lg">
-                <p class="text-xs text-gray-600 font-semibold mb-2">Credenciais padrão:</p>
-                <p class="text-xs text-gray-600">Email: <span class="font-mono bg-gray-200 px-1 rounded">admin@restaurante.com</span></p>
-                <p class="text-xs text-gray-600">Senha: <span class="font-mono bg-gray-200 px-1 rounded">admin123</span></p>
-            </div>
         </div>
 
         <p class="text-center text-white text-sm mt-4">

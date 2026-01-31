@@ -37,12 +37,77 @@
                 <div class="w-3 h-3 bg-gray-500 rounded-full shadow-lg shadow-gray-500/50"></div>
                 <span class="text-gray-700 dark:text-gray-300 font-medium">Manutenção</span>
             </div>
+            <div class="flex items-center space-x-2">
+                <div class="w-3 h-3 bg-purple-500 rounded-full shadow-lg shadow-purple-500/50"></div>
+                <span class="text-gray-700 dark:text-gray-300 font-medium">Delivery</span>
+            </div>
+            <div class="flex items-center space-x-2">
+                <div class="w-3 h-3 bg-indigo-500 rounded-full shadow-lg shadow-indigo-500/50"></div>
+                <span class="text-gray-700 dark:text-gray-300 font-medium">Retirada</span>
+            </div>
         </div>
     </div>
 
-    <!-- Grid de Mesas -->
+    @php
+        $mesasNormais = $mesas->where('tipo', 'normal');
+        $mesasOnline = $mesas->whereIn('tipo', ['delivery', 'retirada']);
+    @endphp
+
+    <!-- Mesas Online (Delivery/Retirada) -->
+    @if($mesasOnline->count() > 0)
+    <div class="bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 rounded-xl p-6 border border-purple-200 dark:border-purple-800">
+        <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center">
+            <svg class="w-6 h-6 mr-2 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            Pedidos Online ({{ $mesasOnline->count() }})
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            @foreach($mesasOnline as $mesa)
+            <div class="group bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border-2
+                {{ $mesa->tipo == 'delivery' ? 'border-purple-400 dark:border-purple-500' : 'border-indigo-400 dark:border-indigo-500' }}
+                cursor-pointer"
+                onclick="showLoading('Abrindo comanda...'); window.location.href='{{ route('mesas.comanda', $mesa) }}'">
+
+                <div class="p-4 {{ $mesa->tipo == 'delivery' ? 'bg-gradient-to-br from-purple-500 to-purple-600' : 'bg-gradient-to-br from-indigo-500 to-indigo-600' }}">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <span class="text-xs font-bold text-white/80 uppercase tracking-wider">{{ $mesa->tipo == 'delivery' ? 'Delivery' : 'Retirada' }}</span>
+                            <h3 class="text-2xl font-bold text-white">{{ $mesa->pedidoOnline ? $mesa->pedidoOnline->numero_pedido : '#' . $mesa->numero }}</h3>
+                        </div>
+                        <span class="px-2 py-1 rounded-full text-xs font-bold bg-white/20 backdrop-blur-sm text-white">
+                            {{ ucfirst($mesa->status) }}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="p-4">
+                    @if($mesa->cliente_nome)
+                    <div class="flex items-center space-x-2 mb-2">
+                        <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                        </svg>
+                        <span class="font-semibold text-gray-700 dark:text-gray-300 text-sm truncate">{{ $mesa->cliente_nome }}</span>
+                    </div>
+                    @endif
+                    @if($mesa->pedidos_count > 0)
+                    <div class="flex items-center space-x-2 bg-red-50 dark:bg-red-900/20 p-2 rounded-lg">
+                        <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <span class="font-bold text-red-600 dark:text-red-400 text-sm">{{ $mesa->pedidos_count }} pedido(s)</span>
+                    </div>
+                    @endif
+                </div>
+            </div>
+            @endforeach
+        </div>
+    </div>
+    @endif
+
+    <!-- Grid de Mesas Normais -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        @forelse($mesas as $mesa)
+        @forelse($mesasNormais as $mesa)
         <div class="group bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-200 dark:border-gray-700 hover:border-
             {{-- Status border color --}}
             @if($mesa->status == 'disponivel') green-400 dark:hover:border-green-500

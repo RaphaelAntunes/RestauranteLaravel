@@ -95,6 +95,12 @@
                 <span class="text-yellow-400 font-semibold">+ R$ {{ number_format($pagamento->valor_acrescimo, 2, ',', '.') }}</span>
             </div>
             @endif
+            @if($pagamento->taxa_servico_aplicada && $pagamento->valor_taxa_servico > 0)
+            <div class="flex justify-between">
+                <span class="text-gray-300">Taxa de Serviço (10%):</span>
+                <span class="text-green-400 font-semibold">+ R$ {{ number_format($pagamento->valor_taxa_servico, 2, ',', '.') }}</span>
+            </div>
+            @endif
             <div class="flex justify-between text-xl font-bold pt-3 border-t border-gray-600">
                 <span class="text-white">Total:</span>
                 <span class="text-green-400">R$ {{ number_format($pagamento->total, 2, ',', '.') }}</span>

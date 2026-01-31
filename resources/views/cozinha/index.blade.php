@@ -35,7 +35,7 @@
     </div>
 
     <!-- Grid de Pedidos -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
         <!-- Novos Pedidos (Aguardando) -->
         <div>
             <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
@@ -80,6 +80,21 @@
                 @endforeach
             </div>
         </div>
+
+        <!-- Saiu p/ Entrega -->
+        <div>
+            <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                <span class="bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300 px-3 py-1 rounded-full mr-2 border border-purple-200 dark:border-purple-800">
+                    <span id="count-saiu-entrega">{{ $pedidosSaiuEntrega->count() }}</span>
+                </span>
+                Saiu p/ Entrega
+            </h2>
+            <div id="saiu-entrega" class="space-y-4">
+                @foreach($pedidosSaiuEntrega as $pedido)
+                    @include('cozinha.partials.pedido-card', ['pedido' => $pedido, 'tipo' => 'saiu_entrega'])
+                @endforeach
+            </div>
+        </div>
     </div>
 </div>
 @endsection
@@ -103,6 +118,7 @@ function atualizarPedidos() {
             document.getElementById('count-novos').textContent = data.novos.length;
             document.getElementById('count-preparo').textContent = data.em_preparo.length;
             document.getElementById('count-prontos').textContent = data.prontos.length;
+            document.getElementById('count-saiu-entrega').textContent = data.saiu_entrega.length;
 
             // Atualizar HTML dos pedidos
             if (data.html_novos !== undefined) {
@@ -113,6 +129,9 @@ function atualizarPedidos() {
             }
             if (data.html_prontos !== undefined) {
                 document.getElementById('prontos').innerHTML = data.html_prontos;
+            }
+            if (data.html_saiu_entrega !== undefined) {
+                document.getElementById('saiu-entrega').innerHTML = data.html_saiu_entrega;
             }
 
             // Atualizar timestamp
@@ -191,9 +210,33 @@ function marcarPronto(pedidoId) {
 
 function entregar(pedidoId) {
     // Mostrar loading
-    showLoading('Entregando pedido...');
+    showLoading('Enviando para entrega...');
 
     fetch(`/cozinha/pedido/${pedidoId}/entregar`, {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            atualizarPedidos();
+        }
+    })
+    .catch(error => console.error('Erro:', error))
+    .finally(() => {
+        // Esconder loading
+        hideLoading();
+    });
+}
+
+function marcarEntregue(pedidoId) {
+    // Mostrar loading
+    showLoading('Finalizando entrega...');
+
+    fetch(`/cozinha/pedido/${pedidoId}/entregue`, {
         method: 'POST',
         headers: {
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,

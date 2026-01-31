@@ -20,6 +20,7 @@ class Produto extends Model
         'tempo_preparo',
         'ativo',
         'destaque',
+        'ordem',
     ];
 
     protected function casts(): array
@@ -29,6 +30,7 @@ class Produto extends Model
             'tempo_preparo' => 'integer',
             'ativo' => 'boolean',
             'destaque' => 'boolean',
+            'ordem' => 'integer',
         ];
     }
 

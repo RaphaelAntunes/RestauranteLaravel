@@ -52,13 +52,55 @@
         </div>
 
         <!-- Footer -->
-        <div class="sticky bottom-0 bg-gray-50 dark:bg-gray-900 p-4 rounded-b-xl border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
-            <button onclick="fecharModal('modalPedido')" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition">
-                Fechar
-            </button>
-            <a id="modalPedidoVerMais" href="#" class="px-4 py-2 bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-lg hover:from-red-600 hover:to-orange-600 transition">
-                Ver Detalhes Completos
-            </a>
+        <div class="sticky bottom-0 bg-gray-50 dark:bg-gray-900 p-4 rounded-b-xl border-t border-gray-200 dark:border-gray-700">
+            @if(auth()->user()->isAdmin())
+            <!-- Ações Admin -->
+            <div class="flex gap-2 mb-3">
+                <button onclick="mostrarFormInvalidar()" class="flex-1 px-3 py-2 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50 transition text-sm font-medium">
+                    <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                    </svg>
+                    Invalidar Pedido
+                </button>
+                <button onclick="mostrarFormAlterarData()" class="flex-1 px-3 py-2 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-lg hover:bg-amber-200 dark:hover:bg-amber-900/50 transition text-sm font-medium">
+                    <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    </svg>
+                    Alterar Data
+                </button>
+            </div>
+
+            <!-- Form Invalidar (oculto por padrão) -->
+            <div id="formInvalidar" class="hidden mb-3 p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
+                <p class="text-sm font-medium text-red-800 dark:text-red-300 mb-2">Invalidar Pedido</p>
+                <p class="text-xs text-red-600 dark:text-red-400 mb-2">O pedido será cancelado e removido do faturamento.</p>
+                <input type="text" id="motivoInvalidar" placeholder="Motivo da invalidação (opcional)" class="w-full px-3 py-2 text-sm border border-red-300 dark:border-red-700 rounded-lg dark:bg-gray-800 dark:text-white mb-2">
+                <div class="flex gap-2">
+                    <button onclick="ocultarFormInvalidar()" class="flex-1 px-3 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg text-sm">Cancelar</button>
+                    <button onclick="confirmarInvalidar()" class="flex-1 px-3 py-2 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700">Confirmar</button>
+                </div>
+            </div>
+
+            <!-- Form Alterar Data (oculto por padrão) -->
+            <div id="formAlterarData" class="hidden mb-3 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
+                <p class="text-sm font-medium text-amber-800 dark:text-amber-300 mb-2">Alterar Data do Pedido</p>
+                <p class="text-xs text-amber-600 dark:text-amber-400 mb-2">O faturamento será contabilizado na nova data.</p>
+                <input type="date" id="novaDataPedido" class="w-full px-3 py-2 text-sm border border-amber-300 dark:border-amber-700 rounded-lg dark:bg-gray-800 dark:text-white mb-2">
+                <div class="flex gap-2">
+                    <button onclick="ocultarFormAlterarData()" class="flex-1 px-3 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg text-sm">Cancelar</button>
+                    <button onclick="confirmarAlterarData()" class="flex-1 px-3 py-2 bg-amber-600 text-white rounded-lg text-sm hover:bg-amber-700">Confirmar</button>
+                </div>
+            </div>
+            @endif
+
+            <div class="flex justify-end gap-3">
+                <button onclick="fecharModal('modalPedido')" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition">
+                    Fechar
+                </button>
+                <a id="modalPedidoVerMais" href="#" class="px-4 py-2 bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-lg hover:from-red-600 hover:to-orange-600 transition">
+                    Ver Detalhes Completos
+                </a>
+            </div>
         </div>
     </div>
 </div>
@@ -109,9 +151,17 @@
 </div>
 
 <script>
+// Variável global para armazenar o ID do pedido atual
+let pedidoAtualId = null;
+
 function abrirModalPedido(id) {
+    pedidoAtualId = id; // Armazenar o ID do pedido
     document.getElementById('modalPedido').classList.remove('hidden');
     document.body.style.overflow = 'hidden';
+
+    // Resetar formulários
+    ocultarFormInvalidar();
+    ocultarFormAlterarData();
 
     // Mostrar loading
     showLoading('Carregando detalhes do pedido...');
@@ -152,8 +202,10 @@ function abrirModalPedido(id) {
                         <div class="flex-1">
                             <p class="font-medium text-gray-900 dark:text-white">
                                 <span class="text-red-600 dark:text-red-400 font-bold">${item.quantidade}x</span> ${item.produto}
+                                ${item.tamanho ? `<span class="text-orange-500 font-semibold">(${item.tamanho})</span>` : ''}
                             </p>
-                            ${item.observacoes ? `<p class="text-xs text-yellow-600 dark:text-yellow-400 mt-1">Obs: ${item.observacoes}</p>` : ''}
+                            ${item.sabores ? `<p class="text-xs text-blue-600 dark:text-blue-400 mt-1"><strong>Sabores:</strong> ${item.sabores}</p>` : ''}
+                            ${item.observacoes ? `<p class="text-xs text-yellow-600 dark:text-yellow-400 mt-1"><strong>Obs:</strong> ${item.observacoes}</p>` : ''}
                         </div>
                         <div class="text-right ml-4">
                             <p class="text-sm text-gray-600 dark:text-gray-400">${item.preco_unitario}</p>
@@ -201,7 +253,12 @@ function abrirModalMesa(id) {
 
                     let itensHtml = '';
                     pedido.itens.forEach(item => {
-                        itensHtml += `<li class="text-sm text-gray-600 dark:text-gray-400">${item.quantidade}x ${item.produto} - ${item.subtotal}</li>`;
+                        let itemText = `${item.quantidade}x ${item.produto}`;
+                        if (item.tamanho) itemText += ` (${item.tamanho})`;
+                        if (item.sabores) itemText += ` - ${item.sabores}`;
+                        itemText += ` - ${item.subtotal}`;
+                        if (item.observacoes) itemText += ` <span class="text-yellow-500">[${item.observacoes}]</span>`;
+                        itensHtml += `<li class="text-sm text-gray-600 dark:text-gray-400">${itemText}</li>`;
                     });
 
                     pedidosHtml += `
@@ -239,4 +296,106 @@ document.addEventListener('keydown', function(e) {
         fecharModal('modalMesa');
     }
 });
+
+// Funções para Invalidar Pedido
+function mostrarFormInvalidar() {
+    document.getElementById('formInvalidar').classList.remove('hidden');
+    document.getElementById('formAlterarData').classList.add('hidden');
+}
+
+function ocultarFormInvalidar() {
+    const form = document.getElementById('formInvalidar');
+    if (form) {
+        form.classList.add('hidden');
+        document.getElementById('motivoInvalidar').value = '';
+    }
+}
+
+function confirmarInvalidar() {
+    if (!pedidoAtualId) return;
+
+    const motivo = document.getElementById('motivoInvalidar').value;
+
+    showLoading('Invalidando pedido...');
+
+    fetch(`/pedidos/${pedidoAtualId}/invalidar`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        },
+        body: JSON.stringify({ motivo: motivo })
+    })
+    .then(response => response.json())
+    .then(data => {
+        hideLoading();
+        if (data.success) {
+            alert(data.message);
+            fecharModal('modalPedido');
+            window.location.reload();
+        } else {
+            alert(data.error || 'Erro ao invalidar pedido');
+        }
+    })
+    .catch(error => {
+        hideLoading();
+        console.error('Erro:', error);
+        alert('Erro ao processar requisição');
+    });
+}
+
+// Funções para Alterar Data
+function mostrarFormAlterarData() {
+    document.getElementById('formAlterarData').classList.remove('hidden');
+    document.getElementById('formInvalidar').classList.add('hidden');
+
+    // Definir data atual como padrão
+    const hoje = new Date().toISOString().split('T')[0];
+    document.getElementById('novaDataPedido').value = hoje;
+}
+
+function ocultarFormAlterarData() {
+    const form = document.getElementById('formAlterarData');
+    if (form) {
+        form.classList.add('hidden');
+        document.getElementById('novaDataPedido').value = '';
+    }
+}
+
+function confirmarAlterarData() {
+    if (!pedidoAtualId) return;
+
+    const novaData = document.getElementById('novaDataPedido').value;
+    if (!novaData) {
+        alert('Selecione uma data');
+        return;
+    }
+
+    showLoading('Alterando data do pedido...');
+
+    fetch(`/pedidos/${pedidoAtualId}/alterar-data`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        },
+        body: JSON.stringify({ nova_data: novaData })
+    })
+    .then(response => response.json())
+    .then(data => {
+        hideLoading();
+        if (data.success) {
+            alert(data.message);
+            fecharModal('modalPedido');
+            window.location.reload();
+        } else {
+            alert(data.error || 'Erro ao alterar data');
+        }
+    })
+    .catch(error => {
+        hideLoading();
+        console.error('Erro:', error);
+        alert('Erro ao processar requisição');
+    });
+}
 </script>

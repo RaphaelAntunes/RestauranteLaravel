@@ -32,14 +32,20 @@ class HomeController extends Controller
             : today()->endOfDay();
 
         // Estatísticas gerais filtradas por período
+        // Faturamento líquido (sem taxa de serviço do garçom - 10% é repassado)
+        $faturamentoBruto = Pagamento::whereBetween('created_at', [$dataInicio, $dataFim])
+            ->where('status', 'aprovado')
+            ->sum('total');
+        $taxaServicoTotal = Pagamento::whereBetween('created_at', [$dataInicio, $dataFim])
+            ->where('status', 'aprovado')
+            ->sum('valor_taxa_servico');
+
         $stats = [
-            'pedidos_abertos' => Pedido::whereIn('status', ['aberto', 'em_preparo'])
-                ->whereBetween('created_at', [$dataInicio, $dataFim])
+            'pedidos_periodo' => Pedido::whereBetween('created_at', [$dataInicio, $dataFim])
                 ->count(),
             'mesas_ocupadas' => Mesa::where('status', 'ocupada')->count(),
-            'total_hoje' => Pagamento::whereBetween('created_at', [$dataInicio, $dataFim])
-                ->where('status', 'aprovado')
-                ->sum('total'),
+            'total_hoje' => $faturamentoBruto - $taxaServicoTotal, // Faturamento líquido
+            'taxa_servico' => $taxaServicoTotal, // Para exibir separadamente se necessário
             'produtos_ativos' => Produto::where('ativo', true)->count(),
         ];
 

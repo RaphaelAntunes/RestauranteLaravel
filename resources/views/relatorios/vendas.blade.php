@@ -79,6 +79,81 @@
         </div>
     </div>
 
+    <!-- Vendas por Tipo de Pedido -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Vendas por Tipo de Pedido</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <!-- Mesa -->
+            <div class="bg-green-50 dark:bg-green-900/20 rounded-xl p-6 border border-green-200 dark:border-green-800">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="bg-green-100 dark:bg-green-900/40 p-3 rounded-lg">
+                        <svg class="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                        </svg>
+                    </div>
+                    <span class="text-xs font-semibold text-green-700 dark:text-green-300 bg-green-200 dark:bg-green-800 px-2 py-1 rounded-full">
+                        {{ $tiposVenda['mesa']['quantidade'] }} {{ $tiposVenda['mesa']['quantidade'] == 1 ? 'pedido' : 'pedidos' }}
+                    </span>
+                </div>
+                <h3 class="text-lg font-semibold text-green-900 dark:text-green-100">Mesa</h3>
+                <p class="text-2xl font-bold text-green-700 dark:text-green-300 mt-1">
+                    R$ {{ number_format($tiposVenda['mesa']['total'], 2, ',', '.') }}
+                </p>
+                @if($faturamento > 0)
+                    <p class="text-xs text-green-600 dark:text-green-400 mt-2">
+                        {{ number_format(($tiposVenda['mesa']['total'] / $faturamento) * 100, 1) }}% do total
+                    </p>
+                @endif
+            </div>
+
+            <!-- Delivery -->
+            <div class="bg-purple-50 dark:bg-purple-900/20 rounded-xl p-6 border border-purple-200 dark:border-purple-800">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="bg-purple-100 dark:bg-purple-900/40 p-3 rounded-lg">
+                        <svg class="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"></path>
+                        </svg>
+                    </div>
+                    <span class="text-xs font-semibold text-purple-700 dark:text-purple-300 bg-purple-200 dark:bg-purple-800 px-2 py-1 rounded-full">
+                        {{ $tiposVenda['delivery']['quantidade'] }} {{ $tiposVenda['delivery']['quantidade'] == 1 ? 'pedido' : 'pedidos' }}
+                    </span>
+                </div>
+                <h3 class="text-lg font-semibold text-purple-900 dark:text-purple-100">Delivery</h3>
+                <p class="text-2xl font-bold text-purple-700 dark:text-purple-300 mt-1">
+                    R$ {{ number_format($tiposVenda['delivery']['total'], 2, ',', '.') }}
+                </p>
+                @if($faturamento > 0)
+                    <p class="text-xs text-purple-600 dark:text-purple-400 mt-2">
+                        {{ number_format(($tiposVenda['delivery']['total'] / $faturamento) * 100, 1) }}% do total
+                    </p>
+                @endif
+            </div>
+
+            <!-- Retirada -->
+            <div class="bg-indigo-50 dark:bg-indigo-900/20 rounded-xl p-6 border border-indigo-200 dark:border-indigo-800">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="bg-indigo-100 dark:bg-indigo-900/40 p-3 rounded-lg">
+                        <svg class="w-6 h-6 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>
+                        </svg>
+                    </div>
+                    <span class="text-xs font-semibold text-indigo-700 dark:text-indigo-300 bg-indigo-200 dark:bg-indigo-800 px-2 py-1 rounded-full">
+                        {{ $tiposVenda['retirada']['quantidade'] }} {{ $tiposVenda['retirada']['quantidade'] == 1 ? 'pedido' : 'pedidos' }}
+                    </span>
+                </div>
+                <h3 class="text-lg font-semibold text-indigo-900 dark:text-indigo-100">Retirada</h3>
+                <p class="text-2xl font-bold text-indigo-700 dark:text-indigo-300 mt-1">
+                    R$ {{ number_format($tiposVenda['retirada']['total'], 2, ',', '.') }}
+                </p>
+                @if($faturamento > 0)
+                    <p class="text-xs text-indigo-600 dark:text-indigo-400 mt-2">
+                        {{ number_format(($tiposVenda['retirada']['total'] / $faturamento) * 100, 1) }}% do total
+                    </p>
+                @endif
+            </div>
+        </div>
+    </div>
+
     <!-- Vendas por Dia -->
     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
         <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Vendas por Dia</h2>

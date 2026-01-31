@@ -17,9 +17,26 @@ class GarcomController extends Controller
      */
     public function index()
     {
-        $mesas = Mesa::withCount(['pedidos' => function($query) {
-            $query->whereIn('status', ['aberto', 'em_preparo', 'pronto']);
-        }])->orderBy('numero')->get();
+        $mesas = Mesa::with('pedidoOnline.cliente')
+            ->orderByRaw("FIELD(tipo, 'delivery', 'retirada', 'normal')")
+            ->orderBy('numero')
+            ->get();
+
+        // Calcular pedidos_count manualmente considerando a sessão atual
+        $mesas->each(function($mesa) {
+            $query = $mesa->pedidos()
+                ->whereIn('status', ['aberto', 'em_preparo', 'pronto', 'saiu_entrega']);
+
+            // Filtrar pela sessão atual da mesa
+            if ($mesa->sessao_atual) {
+                $query->where('sessao_id', $mesa->sessao_atual);
+            } else {
+                // Se não tem sessão, só contar pedidos sem sessão
+                $query->whereNull('sessao_id');
+            }
+
+            $mesa->pedidos_count = $query->count();
+        });
 
         return view('garcom.index', compact('mesas'));
     }
@@ -53,8 +70,10 @@ class GarcomController extends Controller
         });
 
         // Buscar produtos para adicionar novos itens (incluindo tamanhos para pizzas)
+        // Ordenar por ordem (menor primeiro) e depois por nome
         $produtosTemp = Produto::with(['categoria', 'tamanhos'])
             ->where('ativo', true)
+            ->orderBy('ordem')
             ->orderBy('nome')
             ->get()
             ->groupBy('categoria.nome');
@@ -77,8 +96,11 @@ class GarcomController extends Controller
         }
 
         // Buscar sabores agrupados por categoria para o modal de pizzas
+        // Ordenar: especiais primeiro (que têm preços definidos), depois por nome
         $sabores = Sabor::with('categoria')
             ->where('ativo', true)
+            ->orderByRaw('CASE WHEN preco_p IS NOT NULL OR preco_m IS NOT NULL OR preco_g IS NOT NULL OR preco_gg IS NOT NULL THEN 0 ELSE 1 END')
+            ->orderBy('ordem')
             ->orderBy('nome')
             ->get()
             ->groupBy('categoria.nome');
@@ -163,13 +185,19 @@ class GarcomController extends Controller
             ->whereIn('status', ['aberto', 'em_preparo', 'pronto', 'entregue'])
             ->count();
 
-        // Se não há mais pedidos ativos, liberar a mesa e preparar para nova sessão
+        // Se não há mais pedidos ativos
         if ($pedidosAtivos == 0) {
-            $mesa->update([
-                'status' => 'disponivel',
-                'cliente_nome' => null,
-                'sessao_atual' => null // Limpar sessão para gerar nova no próximo pedido
-            ]);
+            // Se for mesa virtual (online), deletar
+            if ($mesa->isOnline()) {
+                $mesa->delete();
+            } else {
+                // Mesa normal: liberar e preparar para nova sessão
+                $mesa->update([
+                    'status' => 'disponivel',
+                    'cliente_nome' => null,
+                    'sessao_atual' => null
+                ]);
+            }
         }
 
         return response()->json([
@@ -275,14 +303,22 @@ class GarcomController extends Controller
                     ->whereIn('status', ['aberto', 'em_preparo', 'pronto', 'entregue'])
                     ->count();
 
-                // Se não há mais pedidos ativos, liberar a mesa
+                // Se não há mais pedidos ativos
                 if ($pedidosAtivos == 0) {
-                    $mesa->update([
-                        'status' => 'disponivel',
-                        'cliente_nome' => null,
-                        'sessao_atual' => null
-                    ]);
+                    // Se for mesa virtual (online), deletar
+                    if ($mesa->isOnline()) {
+                        $mesa->delete();
+                    } else {
+                        // Mesa normal: liberar
+                        $mesa->update([
+                            'status' => 'disponivel',
+                            'cliente_nome' => null,
+                            'sessao_atual' => null
+                        ]);
+                    }
                 }
+
+                DB::commit();
 
                 return response()->json([
                     'success' => true,

@@ -47,6 +47,9 @@
                         <span class="text-lg font-bold text-red-600 dark:text-red-400">{{ $categoria->produtos_count }}</span>
                         <span class="text-sm text-gray-600 dark:text-gray-400">produto(s)</span>
                     </div>
+                    <span class="px-2 py-1 rounded-full text-xs font-bold {{ $categoria->tipo == 'bebida' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' : 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300' }}">
+                        {{ ucfirst($categoria->tipo ?? 'comida') }}
+                    </span>
                 </div>
 
                 <!-- Botões de Ação -->

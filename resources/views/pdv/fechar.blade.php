@@ -163,6 +163,25 @@
                     <div id="formas-pagamento-inputs"></div>
                 </div>
 
+                <!-- Taxa de Serviço (10% do Garçom) -->
+                <div class="mb-4">
+                    <label class="flex items-center p-4 rounded-xl border-2 border-gray-600 hover:border-green-500 transition cursor-pointer bg-gray-700" id="taxaServicoContainer">
+                        <input type="checkbox" name="taxa_servico_aplicada" id="taxa_servico_aplicada" value="1"
+                            class="w-5 h-5 text-green-600 bg-gray-700 border-gray-500 rounded focus:ring-green-500 focus:ring-2"
+                            onchange="toggleTaxaServico()">
+                        <div class="ml-3 flex-1">
+                            <div class="flex items-center space-x-2">
+                                <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                </svg>
+                                <span class="font-semibold text-white">Taxa de Serviço (10%)</span>
+                            </div>
+                            <div class="mt-1 text-xs text-gray-400" id="taxaServicoTexto">Adicionar 10% do garçom</div>
+                        </div>
+                        <span class="text-green-400 font-bold text-lg" id="taxaServicoValorPreview">R$ 0,00</span>
+                    </label>
+                </div>
+
                 <!-- Desconto e Acréscimo -->
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-300 mb-3">Ajustes</label>
@@ -226,6 +245,10 @@
                         <span class="text-gray-300">Acréscimo:</span>
                         <span class="text-yellow-400 font-semibold" id="displayAcrescimo">+ R$ 0,00</span>
                     </div>
+                    <div class="flex justify-between text-sm hidden" id="taxaServicoDiv">
+                        <span class="text-gray-300">Taxa de Serviço (10%):</span>
+                        <span class="text-green-400 font-semibold" id="displayTaxaServico">+ R$ 0,00</span>
+                    </div>
                     <div class="flex justify-between border-t border-gray-600 pt-2">
                         <span class="text-white font-bold">Total a Pagar:</span>
                         <span class="text-green-400 font-bold text-xl" id="displayTotal">R$ {{ number_format($total, 2, ',', '.') }}</span>
@@ -252,8 +275,9 @@
                 </div>
 
                 <!-- Botão Finalizar -->
-                <button type="submit" class="w-full px-6 py-4 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white rounded-xl font-bold text-lg shadow-xl transition">
-                    Finalizar Pagamento
+                <button type="submit" id="btnFinalizar" disabled
+                    class="w-full px-6 py-4 bg-gray-500 text-white rounded-xl font-bold text-lg shadow-xl transition cursor-not-allowed disabled:opacity-60">
+                    <span id="btnFinalizarTexto">Adicione uma forma de pagamento</span>
                 </button>
             </form>
         </div>
@@ -435,6 +459,34 @@ let totalFinal = subtotal;
 let formasPagamento = []; // Array para armazenar as formas de pagamento adicionadas
 let formasPagamentoIndex = 0;
 let formaPagamentoAtual = null; // Forma sendo adicionada no modal
+let taxaServicoAtiva = false; // Taxa de serviço do garçom
+
+// Função para alternar taxa de serviço
+function toggleTaxaServico() {
+    taxaServicoAtiva = document.getElementById('taxa_servico_aplicada').checked;
+    const container = document.getElementById('taxaServicoContainer');
+    const taxaServicoDiv = document.getElementById('taxaServicoDiv');
+    const valorTaxaServico = (subtotal * 10) / 100;
+
+    if (taxaServicoAtiva) {
+        container.classList.remove('border-gray-600');
+        container.classList.add('border-green-500', 'bg-green-900/20');
+        document.getElementById('taxaServicoTexto').textContent = '10% do garçom ativado';
+        taxaServicoDiv.classList.remove('hidden');
+    } else {
+        container.classList.remove('border-green-500', 'bg-green-900/20');
+        container.classList.add('border-gray-600');
+        document.getElementById('taxaServicoTexto').textContent = 'Adicionar 10% do garçom';
+        taxaServicoDiv.classList.add('hidden');
+    }
+
+    // Atualizar preview do valor
+    document.getElementById('taxaServicoValorPreview').textContent = taxaServicoAtiva
+        ? 'R$ ' + valorTaxaServico.toFixed(2).replace('.', ',')
+        : 'R$ 0,00';
+
+    calcularTotal();
+}
 
 const nomeFormas = {
     'dinheiro': 'Dinheiro',
@@ -771,36 +823,73 @@ function atualizarTotais() {
     } else {
         document.getElementById('forma_pagamento').value = '';
     }
+
+    // Atualizar estado do botão de finalizar
+    atualizarBotaoFinalizar(restante, totalPago);
+}
+
+// Função para habilitar/desabilitar botão de finalizar
+function atualizarBotaoFinalizar(restante, totalPago) {
+    const btnFinalizar = document.getElementById('btnFinalizar');
+    const btnTexto = document.getElementById('btnFinalizarTexto');
+
+    // Tolerância de 1 centavo para arredondamentos de ponto flutuante
+    const restanteArredondado = Math.round(restante * 100) / 100;
+
+    if (formasPagamento.length === 0) {
+        // Nenhuma forma de pagamento adicionada
+        btnFinalizar.disabled = true;
+        btnFinalizar.className = 'w-full px-6 py-4 bg-gray-500 text-white rounded-xl font-bold text-lg shadow-xl transition cursor-not-allowed disabled:opacity-60';
+        btnTexto.textContent = 'Adicione uma forma de pagamento';
+    } else if (restanteArredondado > 0.01) {
+        // Ainda há saldo devedor (tolerância de 1 centavo)
+        btnFinalizar.disabled = true;
+        btnFinalizar.className = 'w-full px-6 py-4 bg-gray-500 text-white rounded-xl font-bold text-lg shadow-xl transition cursor-not-allowed disabled:opacity-60';
+        btnTexto.textContent = `Faltam R$ ${restanteArredondado.toFixed(2).replace('.', ',')}`;
+    } else {
+        // Pode finalizar
+        btnFinalizar.disabled = false;
+        btnFinalizar.className = 'w-full px-6 py-4 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white rounded-xl font-bold text-lg shadow-xl transition cursor-pointer';
+        btnTexto.textContent = 'Finalizar Pagamento';
+    }
 }
 
 function calcularTotal() {
-    // Calcular desconto
+    // Calcular desconto (arredondado para 2 casas decimais)
     let valorDesconto = 0;
     const tipoDesconto = document.getElementById('tipo_desconto').value;
 
     if (tipoDesconto === 'porcentagem') {
         const descontoPorcentagem = parseFloat(document.getElementById('desconto_porcentagem').value) || 0;
-        valorDesconto = (subtotal * descontoPorcentagem) / 100;
+        valorDesconto = Math.round((subtotal * descontoPorcentagem) / 100 * 100) / 100;
     } else {
-        valorDesconto = parseFloat(document.getElementById('desconto_valor').value) || 0;
+        valorDesconto = Math.round((parseFloat(document.getElementById('desconto_valor').value) || 0) * 100) / 100;
     }
 
-    // Calcular acréscimo
+    // Calcular acréscimo (arredondado para 2 casas decimais)
     let valorAcrescimo = 0;
     const tipoAcrescimo = document.getElementById('tipo_acrescimo').value;
 
     if (tipoAcrescimo === 'porcentagem') {
         const acrescimoPorcentagem = parseFloat(document.getElementById('acrescimo_porcentagem').value) || 0;
-        valorAcrescimo = (subtotal * acrescimoPorcentagem) / 100;
+        valorAcrescimo = Math.round((subtotal * acrescimoPorcentagem) / 100 * 100) / 100;
     } else {
-        valorAcrescimo = parseFloat(document.getElementById('acrescimo_valor').value) || 0;
+        valorAcrescimo = Math.round((parseFloat(document.getElementById('acrescimo_valor').value) || 0) * 100) / 100;
     }
 
-    totalFinal = subtotal - valorDesconto + valorAcrescimo;
+    // Calcular taxa de serviço (10%)
+    let valorTaxaServico = 0;
+    if (taxaServicoAtiva) {
+        valorTaxaServico = Math.round((subtotal * 10) / 100 * 100) / 100;
+    }
+
+    // Arredondar para 2 casas decimais para evitar problemas de ponto flutuante
+    totalFinal = Math.round((subtotal - valorDesconto + valorAcrescimo + valorTaxaServico) * 100) / 100;
 
     // Atualizar display
     document.getElementById('displayDesconto').textContent = '- R$ ' + valorDesconto.toFixed(2).replace('.', ',');
     document.getElementById('displayAcrescimo').textContent = '+ R$ ' + valorAcrescimo.toFixed(2).replace('.', ',');
+    document.getElementById('displayTaxaServico').textContent = '+ R$ ' + valorTaxaServico.toFixed(2).replace('.', ',');
     document.getElementById('displayTotal').textContent = 'R$ ' + totalFinal.toFixed(2).replace('.', ',');
 
     // Mostrar/ocultar linhas de desconto e acréscimo
@@ -826,25 +915,39 @@ function calcularTotal() {
 // Inicializar com valores ocultos
 document.getElementById('descontoDiv').classList.add('hidden');
 document.getElementById('acrescimoDiv').classList.add('hidden');
+document.getElementById('taxaServicoDiv').classList.add('hidden');
+
+// Inicializar preview da taxa de serviço
+const taxaServicoPreviewInicial = (subtotal * 10) / 100;
+document.getElementById('taxaServicoValorPreview').textContent = 'R$ ' + taxaServicoPreviewInicial.toFixed(2).replace('.', ',');
 
 // Inicializar formas de pagamento
 renderizarFormasPagamento();
 atualizarTotais();
 
-// Validação do formulário antes de enviar
+// Validação do formulário antes de enviar (segurança extra)
 document.getElementById('formPagamento').addEventListener('submit', function(e) {
     const totalPago = getTotalPago();
-    if (totalPago < totalFinal) {
-        e.preventDefault();
-        mostrarNotificacao(`O valor pago (R$ ${totalPago.toFixed(2).replace('.', ',')}) é menor que o total da conta (R$ ${totalFinal.toFixed(2).replace('.', ',')}). Adicione mais formas de pagamento.`, 'error');
-        return false;
-    }
+    const restante = totalFinal - totalPago;
 
+    // Validação de segurança (botão já fica desabilitado, mas por garantia)
     if (formasPagamento.length === 0) {
         e.preventDefault();
         mostrarNotificacao('Adicione pelo menos uma forma de pagamento!', 'error');
         return false;
     }
+
+    if (restante > 0.01) { // tolerância de 1 centavo para arredondamentos
+        e.preventDefault();
+        mostrarNotificacao(`Ainda faltam R$ ${restante.toFixed(2).replace('.', ',')} para completar o pagamento.`, 'error');
+        return false;
+    }
+
+    // Mostrar loading no botão
+    const btnFinalizar = document.getElementById('btnFinalizar');
+    const btnTexto = document.getElementById('btnFinalizarTexto');
+    btnFinalizar.disabled = true;
+    btnTexto.innerHTML = '<svg class="animate-spin h-5 w-5 inline-block mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Processando...';
 });
 
 // Eventos de teclado para o modal
@@ -991,7 +1094,13 @@ function atualizarTotalGeral() {
     document.getElementById('displaySubtotal').textContent = 'R$ ' + novoTotal.toFixed(2).replace('.', ',');
     document.getElementById('totalResumo').textContent = 'R$ ' + novoTotal.toFixed(2).replace('.', ',');
 
-    // Recalcular total com desconto/acréscimo
+    // Atualizar preview da taxa de serviço
+    const valorTaxaServicoPreview = (novoTotal * 10) / 100;
+    document.getElementById('taxaServicoValorPreview').textContent = taxaServicoAtiva
+        ? 'R$ ' + valorTaxaServicoPreview.toFixed(2).replace('.', ',')
+        : 'R$ ' + valorTaxaServicoPreview.toFixed(2).replace('.', ',');
+
+    // Recalcular total com desconto/acréscimo/taxa
     calcularTotal();
 }
 

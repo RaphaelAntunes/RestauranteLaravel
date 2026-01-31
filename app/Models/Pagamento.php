@@ -28,6 +28,9 @@ class Pagamento extends Model
         'valor_desconto',
         'acrescimo',
         'valor_acrescimo',
+        'taxa_servico_aplicada',
+        'taxa_servico',
+        'valor_taxa_servico',
         'status',
         'observacoes',
         'data_pagamento',
@@ -43,6 +46,9 @@ class Pagamento extends Model
             'valor_desconto' => 'decimal:2',
             'acrescimo' => 'decimal:2',
             'valor_acrescimo' => 'decimal:2',
+            'taxa_servico_aplicada' => 'boolean',
+            'taxa_servico' => 'decimal:2',
+            'valor_taxa_servico' => 'decimal:2',
             'data_pagamento' => 'datetime',
         ];
     }

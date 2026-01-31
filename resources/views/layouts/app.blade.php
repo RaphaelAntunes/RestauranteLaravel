@@ -126,6 +126,13 @@
                         <span>Cozinha</span>
                     </a>
 
+                    <a href="{{ route('preparo.index') }}" class="flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 {{ request()->routeIs('preparo.*') ? 'bg-gradient-to-r from-red-500 to-orange-500 text-white shadow-lg' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <span>Preparo</span>
+                    </a>
+
                     @if(auth()->user()->isAdmin())
                     <div class="pt-4 pb-2">
                         <div class="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Gerência</div>

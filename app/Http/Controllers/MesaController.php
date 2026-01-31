@@ -9,20 +9,24 @@ class MesaController extends Controller
 {
     public function index()
     {
-        $mesas = Mesa::orderBy('numero')->get()->map(function($mesa) {
-            // Contar pedidos da sessão atual
-            $mesa->pedidos_count = $mesa->pedidos()
-                ->where(function($query) use ($mesa) {
-                    if ($mesa->sessao_atual) {
-                        $query->where('sessao_id', $mesa->sessao_atual);
-                    } else {
-                        $query->whereNull('sessao_id');
-                    }
-                })
-                ->whereIn('status', ['aberto', 'em_preparo', 'pronto'])
-                ->count();
-            return $mesa;
-        });
+        $mesas = Mesa::with('pedidoOnline.cliente')
+            ->orderByRaw("FIELD(tipo, 'delivery', 'retirada', 'normal')")
+            ->orderBy('numero')
+            ->get()
+            ->map(function($mesa) {
+                // Contar pedidos da sessão atual
+                $mesa->pedidos_count = $mesa->pedidos()
+                    ->where(function($query) use ($mesa) {
+                        if ($mesa->sessao_atual) {
+                            $query->where('sessao_id', $mesa->sessao_atual);
+                        } else {
+                            $query->whereNull('sessao_id');
+                        }
+                    })
+                    ->whereIn('status', ['aberto', 'em_preparo', 'pronto', 'saiu_entrega'])
+                    ->count();
+                return $mesa;
+            });
 
         return view('mesas.index', compact('mesas'));
     }
