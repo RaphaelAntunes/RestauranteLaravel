@@ -18,7 +18,9 @@ services:
     volumes:
       - ./.env:/var/www/html/.env:ro
       - ./storage:/var/www/html/storage
+      - ./public/build:/var/www/html/public/build:ro
     environment:
+      - TZ=America/Sao_Paulo
       - APP_ENV=production
       - APP_DEBUG=false
     depends_on:
@@ -50,6 +52,7 @@ services:
     container_name: restaurante_mysql
     restart: unless-stopped
     environment:
+      TZ: America/Sao_Paulo
       MYSQL_DATABASE: ${DB_DATABASE:-restaurante}
       MYSQL_USER: ${DB_USERNAME:-restaurante}
       MYSQL_PASSWORD: ${DB_PASSWORD:-secret}
@@ -98,6 +101,7 @@ services:
       - ./.env:/var/www/html/.env:ro
       - ./storage:/var/www/html/storage
     environment:
+      - TZ=America/Sao_Paulo
       - APP_ENV=production
       - APP_DEBUG=false
     depends_on:
@@ -119,6 +123,7 @@ services:
       - ./.env:/var/www/html/.env:ro
       - ./storage:/var/www/html/storage
     environment:
+      - TZ=America/Sao_Paulo
       - APP_ENV=production
       - APP_DEBUG=false
     depends_on:

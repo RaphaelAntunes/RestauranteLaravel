@@ -20,7 +20,8 @@ RUN apk add --no-cache \
     mysql-client \
     nodejs \
     npm \
-    supervisor
+    supervisor \
+    tzdata
 
 # Configurar e instalar extensões PHP
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
