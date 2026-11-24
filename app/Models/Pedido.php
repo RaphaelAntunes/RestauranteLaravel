@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToLoja;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,9 +11,24 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Pedido extends Model
 {
-    use HasFactory;
+    use HasFactory, BelongsToLoja;
+
+    protected static function booted(): void
+    {
+        static::updated(function (Pedido $pedido): void {
+            if (!$pedido->wasChanged('status') || !in_array($pedido->status, ['finalizado', 'cancelado'], true)) {
+                return;
+            }
+
+            $mesa = $pedido->mesa;
+            if ($mesa?->isOnline()) {
+                $mesa->liberarMesaVirtual();
+            }
+        });
+    }
 
     protected $fillable = [
+        'loja_id',
         'mesa_id',
         'sessao_id',
         'user_id',

@@ -28,6 +28,10 @@ class CheckUserActive
      */
     public function handle(Request $request, Closure $next): Response
     {
+        if ($request->routeIs('logout')) {
+            return $next($request);
+        }
+
         // Ignorar rotas públicas
         if ($this->shouldSkip($request)) {
             return $next($request);

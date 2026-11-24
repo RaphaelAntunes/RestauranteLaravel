@@ -33,6 +33,8 @@ class CardapioController extends Controller
 
     public function show(Produto $produto)
     {
+        abort_unless($produto->ativo && $produto->categoria?->ativo, 404);
+
         $produto->load(['categoria', 'tamanhos']);
 
         $sabores = [];

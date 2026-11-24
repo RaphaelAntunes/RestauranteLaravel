@@ -32,7 +32,7 @@
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ ucwords(str_replace('_', ' ', $pagamento->forma_pagamento)) }}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600 text-right">R$ {{ number_format($pagamento->total, 2, ',', '.') }}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-center text-sm">
-                        <a href="{{ route('pdv.comprovante', $pagamento) }}" class="text-indigo-600 hover:text-indigo-900">Ver Comprovante</a>
+                        <a href="{{ route('pdv.comprovante', ['pagamento' => $pagamento]) }}" class="text-indigo-600 hover:text-indigo-900">Ver Comprovante</a>
                     </td>
                 </tr>
                 @empty

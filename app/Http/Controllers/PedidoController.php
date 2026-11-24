@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\LojaValidation;
 use App\Models\Pedido;
 use App\Models\Mesa;
 use App\Models\Produto;
@@ -89,15 +90,15 @@ class PedidoController extends Controller
         }
 
         $validated = $request->validate([
-            'mesa_id' => 'required|exists:mesas,id',
+            'mesa_id' => ['required', LojaValidation::exists('mesas')],
             'observacoes' => 'nullable|string',
             'itens' => 'required|array|min:1',
-            'itens.*.produto_id' => 'required|exists:produtos,id',
+            'itens.*.produto_id' => ['required', LojaValidation::exists('produtos')],
             'itens.*.quantidade' => 'required|integer|min:1',
             'itens.*.observacoes' => 'nullable|string',
-            'itens.*.tamanho_id' => 'nullable|exists:produto_tamanhos,id',
+            'itens.*.tamanho_id' => ['nullable', LojaValidation::exists('produto_tamanhos')],
             'itens.*.sabores' => 'nullable|array',
-            'itens.*.sabores.*' => 'exists:sabores,id',
+            'itens.*.sabores.*' => LojaValidation::exists('sabores'),
         ], [
             'mesa_id.required' => 'Selecione uma mesa',
             'itens.required' => 'Adicione pelo menos um item ao pedido',
@@ -206,7 +207,7 @@ class PedidoController extends Controller
                     ->with('success', 'Pedido enviado com sucesso!');
             }
 
-            return redirect()->route('pedidos.show', $pedido)
+            return redirect()->route('pedidos.show', ['pedido' => $pedido])
                 ->with('success', 'Pedido criado com sucesso!');
 
         } catch (\Exception $e) {
@@ -251,7 +252,7 @@ class PedidoController extends Controller
         $validated = $request->validate([
             'observacoes' => 'nullable|string',
             'itens' => 'required|array|min:1',
-            'itens.*.produto_id' => 'required|exists:produtos,id',
+            'itens.*.produto_id' => ['required', LojaValidation::exists('produtos')],
             'itens.*.quantidade' => 'required|integer|min:1',
             'itens.*.observacoes' => 'nullable|string',
         ]);
@@ -287,7 +288,7 @@ class PedidoController extends Controller
 
             DB::commit();
 
-            return redirect()->route('pedidos.show', $pedido)
+            return redirect()->route('pedidos.show', ['pedido' => $pedido])
                 ->with('success', 'Pedido atualizado com sucesso!');
 
         } catch (\Exception $e) {
@@ -306,6 +307,10 @@ class PedidoController extends Controller
 
         if ($validated['status'] == 'finalizado') {
             $pedido->update(['data_finalizacao' => now()]);
+        }
+
+        if (in_array($validated['status'], ['finalizado', 'cancelado'], true) && $pedido->mesa?->isOnline()) {
+            $pedido->mesa->liberarMesaVirtual();
         }
 
         return back()->with('success', 'Status atualizado com sucesso!');
@@ -371,6 +376,7 @@ class PedidoController extends Controller
 
             // Buscar pagamento associado através de pagamento_detalhes
             $pagamentoIds = DB::table('pagamento_detalhes')
+                ->where('loja_id', app(\App\Support\LojaContext::class)->id())
                 ->where('pedido_id', $pedido->id)
                 ->pluck('pagamento_id')
                 ->unique();
@@ -449,6 +455,7 @@ class PedidoController extends Controller
 
             // Buscar pagamento associado através de pagamento_detalhes e alterar a data
             $pagamentoIds = DB::table('pagamento_detalhes')
+                ->where('loja_id', app(\App\Support\LojaContext::class)->id())
                 ->where('pedido_id', $pedido->id)
                 ->pluck('pagamento_id')
                 ->unique();

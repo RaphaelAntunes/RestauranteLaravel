@@ -3,7 +3,7 @@
 @section('title', 'PDV - Ponto de Venda')
 
 @section('content')
-<div class="space-y-6">
+<div class="db-counter space-y-6">
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <h1 class="text-3xl font-bold text-gray-900 dark:text-white">PDV - Ponto de Venda</h1>
         <div class="flex gap-3">
@@ -56,7 +56,7 @@
             </div>
 
             <div class="mt-4">
-                <a href="{{ route('pdv.fechar', $mesa) }}" class="block w-full bg-green-600 hover:bg-green-700 text-white text-center px-4 py-2 rounded-lg font-medium shadow-lg transition-all">
+                <a href="{{ route('pdv.fechar', ['mesa' => $mesa]) }}" class="block w-full bg-green-600 hover:bg-green-700 text-white text-center px-4 py-2 rounded-lg font-medium shadow-lg transition-all">
                     Fechar Conta
                 </a>
             </div>

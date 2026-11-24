@@ -3,16 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Sistema Restaurante</title>
+    <title>Login | {{ $lojaAtual->nome ?? 'Restaurante' }}</title>
     @vite(['resources/css/app.css'])
-</head>
-<body class="bg-gradient-to-r from-indigo-500 to-purple-600 min-h-screen flex items-center justify-center">
+<link rel="icon" href="{{ asset('dobra/mark.svg') }}"></head>
+<body class="db-auth"><aside class="db-auth-cover" @if(isset($lojaAtual) && $lojaAtual->banner_path) style="background-image:linear-gradient(rgba(0,0,0,.35),rgba(0,0,0,.7)),url('{{ asset('storage/'.$lojaAtual->banner_path) }}');background-size:cover;background-position:center" @endif><x-dobra-brand/>@unless(isset($lojaAtual) && $lojaAtual->banner_path)<img src="{{ asset('dobra/mesa.svg') }}" alt="">@endunless<p>{{ $lojaAtual->nome ?? 'O restaurante' }}<br>em um só lugar.</p></aside>
     <div class="max-w-md w-full mx-4">
         <!-- Card de Login -->
         <div class="bg-white rounded-lg shadow-2xl p-8">
             <div class="text-center mb-8">
-                <h1 class="text-3xl font-bold text-gray-900">Sistema Restaurante</h1>
-                <p class="text-gray-600 mt-2">Faça login para continuar</p>
+                <h1 class="text-3xl font-bold text-gray-900">Entrada da equipe</h1>
+                <p class="text-gray-600 mt-2">Use seu acesso ao painel do restaurante.</p>
             </div>
 
             <!-- Flash Messages -->
@@ -97,31 +97,10 @@
                 </button>
             </form>
 
-            <!-- Divisor -->
-            <div class="relative my-6">
-                <div class="absolute inset-0 flex items-center">
-                    <div class="w-full border-t border-gray-300"></div>
-                </div>
-                <div class="relative flex justify-center text-sm">
-                    <span class="px-2 bg-white text-gray-500">ou</span>
-                </div>
-            </div>
-
-            <!-- Botão de Login Facial -->
-            <a
-                href="{{ route('face.login') }}"
-                class="block w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold py-3 px-4 rounded-lg transition duration-200 ease-in-out transform hover:scale-105 text-center"
-            >
-                <svg class="inline-block w-5 h-5 mr-2 -mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-                Login com Reconhecimento Facial
-            </a>
-
         </div>
 
         <p class="text-center text-white text-sm mt-4">
-            &copy; {{ date('Y') }} Sistema Restaurante. Todos os direitos reservados.
+            &copy; {{ date('Y') }} Dobra.
         </p>
     </div>
 </body>

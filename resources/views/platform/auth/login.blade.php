@@ -1,0 +1,6 @@
+@extends('layouts.platform')
+@section('title','Gestão da plataforma | Antunes Lab')
+@section('standalone', true)
+@section('content')
+<main class="pl-login"><section class="pl-login-art"><a class="pl-brand" href="{{ url('/') }}"><span class="pl-mark"></span>Antunes Lab</a><div><h1>Uma cozinha.<br>Muitas marcas.</h1><p>Controle as lojas da plataforma, proprietários e acessos em um único lugar.</p></div></section><section class="pl-login-panel"><form class="pl-form" method="POST" action="{{ route('platform.login.post') }}">@csrf<h2>Gestão da plataforma</h2><p style="color:var(--muted);margin:0 0 24px">Acesso reservado ao administrador da Antunes Lab.</p>@if($errors->any())<div class="pl-errors">{{ $errors->first() }}</div>@endif<div class="pl-field"><label for="email">E-mail</label><input id="email" name="email" type="email" value="{{ old('email') }}" required autofocus autocomplete="email"></div><div class="pl-field" style="margin-top:16px"><label for="password">Senha</label><input id="password" name="password" type="password" required autocomplete="current-password"></div><label style="display:flex;gap:8px;margin:18px 0"><input type="checkbox" name="remember" value="1"> Manter conectado</label><button class="pl-btn" type="submit" style="width:100%">Entrar na gestão</button></form></section></main>
+@endsection

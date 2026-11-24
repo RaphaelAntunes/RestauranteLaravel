@@ -2,17 +2,20 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToLoja;
+use App\Support\LojaContext;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
 
 class Configuracao extends Model
 {
-    use HasFactory;
+    use HasFactory, BelongsToLoja;
 
     protected $table = 'configuracoes';
 
     protected $fillable = [
+        'loja_id',
         'chave',
         'valor',
         'tipo',
@@ -21,7 +24,8 @@ class Configuracao extends Model
 
     public static function obter(string $chave, $default = null)
     {
-        return Cache::remember("config_{$chave}", 3600, function () use ($chave, $default) {
+        $lojaId = app(LojaContext::class)->id() ?? 0;
+        return Cache::remember("loja_{$lojaId}_config_{$chave}", 3600, function () use ($chave, $default) {
             $config = self::where('chave', $chave)->first();
 
             if (!$config) {
@@ -44,7 +48,8 @@ class Configuracao extends Model
             ]
         );
 
-        Cache::forget("config_{$chave}");
+        $lojaId = app(LojaContext::class)->id() ?? 0;
+        Cache::forget("loja_{$lojaId}_config_{$chave}");
     }
 
     private static function converterValor($valor, string $tipo)
@@ -62,11 +67,11 @@ class Configuracao extends Model
         parent::boot();
 
         static::saved(function ($config) {
-            Cache::forget("config_{$config->chave}");
+            Cache::forget("loja_{$config->loja_id}_config_{$config->chave}");
         });
 
         static::deleted(function ($config) {
-            Cache::forget("config_{$config->chave}");
+            Cache::forget("loja_{$config->loja_id}_config_{$config->chave}");
         });
     }
 }

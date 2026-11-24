@@ -2,16 +2,18 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToLoja;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class CarrinhoItem extends Model
 {
-    use HasFactory;
+    use HasFactory, BelongsToLoja;
 
     protected $table = 'carrinho_itens';
 
     protected $fillable = [
+        'loja_id',
         'cliente_id',
         'session_id',
         'produto_id',

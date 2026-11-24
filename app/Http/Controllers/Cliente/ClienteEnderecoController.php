@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ClienteEndereco;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class ClienteEnderecoController extends Controller
 {
@@ -25,7 +26,6 @@ class ClienteEnderecoController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'nome_endereco' => 'required|string|max:50',
             'cep' => 'required|string|regex:/^\d{5}-\d{3}$/',
             'logradouro' => 'required|string|max:255',
             'numero' => 'required|string|max:10',
@@ -38,24 +38,30 @@ class ClienteEnderecoController extends Controller
         ]);
 
         $cliente = Auth::guard('cliente')->user();
+        $endereco = null;
 
-        $endereco = ClienteEndereco::create([
-            'cliente_id' => $cliente->id,
-            'nome_endereco' => $request->nome_endereco,
-            'cep' => $request->cep,
-            'logradouro' => $request->logradouro,
-            'numero' => $request->numero,
-            'complemento' => $request->complemento,
-            'bairro' => $request->bairro,
-            'cidade' => $request->cidade,
-            'estado' => $request->estado,
-            'referencia' => $request->referencia,
-            'padrao' => $request->has('padrao') ? true : false,
-        ]);
+        DB::transaction(function () use ($request, $cliente, &$endereco) {
+            $ehPrimeiroEndereco = !$cliente->enderecos()->exists();
+            $nomeInterno = $ehPrimeiroEndereco
+                ? 'Endereço principal'
+                : 'Endereço ' . ($cliente->enderecos()->count() + 1);
+            $endereco = $cliente->enderecos()->create([
+                'nome_endereco' => $nomeInterno,
+                'cep' => $request->cep,
+                'logradouro' => $request->logradouro,
+                'numero' => $request->numero,
+                'complemento' => $request->complemento,
+                'bairro' => $request->bairro,
+                'cidade' => $request->cidade,
+                'estado' => strtoupper($request->estado),
+                'referencia' => $request->referencia,
+                'padrao' => $request->boolean('padrao') || $ehPrimeiroEndereco,
+            ]);
 
-        if ($endereco->padrao) {
-            $endereco->marcarComoPadrao();
-        }
+            if ($endereco->padrao) {
+                $endereco->marcarComoPadrao();
+            }
+        });
 
         return redirect()->route('cliente.enderecos.index')->with('success', 'Endereço cadastrado com sucesso!');
     }
@@ -76,7 +82,6 @@ class ClienteEnderecoController extends Controller
         }
 
         $request->validate([
-            'nome_endereco' => 'required|string|max:50',
             'cep' => 'required|string|regex:/^\d{5}-\d{3}$/',
             'logradouro' => 'required|string|max:255',
             'numero' => 'required|string|max:10',
@@ -89,14 +94,13 @@ class ClienteEnderecoController extends Controller
         ]);
 
         $endereco->update([
-            'nome_endereco' => $request->nome_endereco,
             'cep' => $request->cep,
             'logradouro' => $request->logradouro,
             'numero' => $request->numero,
             'complemento' => $request->complemento,
             'bairro' => $request->bairro,
             'cidade' => $request->cidade,
-            'estado' => $request->estado,
+            'estado' => strtoupper($request->estado),
             'referencia' => $request->referencia,
         ]);
 

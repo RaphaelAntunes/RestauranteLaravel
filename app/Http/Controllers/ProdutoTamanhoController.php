@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\LojaValidation;
 use App\Models\ProdutoTamanho;
 use App\Models\Produto;
 use Illuminate\Http\Request;
@@ -27,7 +28,7 @@ class ProdutoTamanhoController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'produto_id' => 'required|exists:produtos,id',
+            'produto_id' => ['required', LojaValidation::exists('produtos')],
             'nome' => 'required|string|max:255',
             'descricao' => 'nullable|string|max:255',
             'preco' => 'required|numeric|min:0',
@@ -54,7 +55,7 @@ class ProdutoTamanhoController extends Controller
     public function update(Request $request, ProdutoTamanho $produtoTamanho)
     {
         $validated = $request->validate([
-            'produto_id' => 'required|exists:produtos,id',
+            'produto_id' => ['required', LojaValidation::exists('produtos')],
             'nome' => 'required|string|max:255',
             'descricao' => 'nullable|string|max:255',
             'preco' => 'required|numeric|min:0',

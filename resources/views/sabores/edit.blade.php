@@ -18,7 +18,7 @@
     </div>
 
     <!-- Form -->
-    <form action="{{ route('sabores.update', $sabor) }}" method="POST" enctype="multipart/form-data" class="dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 space-y-6">
+    <form action="{{ route('sabores.update', ['sabor' => $sabor]) }}" method="POST" enctype="multipart/form-data" class="dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 space-y-6">
         @csrf
         @method('PUT')
 

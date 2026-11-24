@@ -6,6 +6,7 @@ use App\Models\Produto;
 use App\Models\Categoria;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use App\Support\LojaValidation;
 
 class ProdutoController extends Controller
 {
@@ -27,12 +28,12 @@ class ProdutoController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'categoria_id' => 'required|exists:categorias,id',
+            'categoria_id' => ['required', LojaValidation::exists('categorias')],
             'nome' => 'required|string|max:150',
             'descricao' => 'nullable|string',
             'preco' => 'required|numeric|min:0',
             'tempo_preparo' => 'required|integer|min:1',
-            'imagem' => 'nullable|image|max:2048',
+            'imagem' => 'nullable|image|max:4096',
             'ativo' => 'boolean',
             'destaque' => 'boolean',
             'ordem' => 'nullable|integer|min:0',
@@ -44,7 +45,7 @@ class ProdutoController extends Controller
         ]);
 
         if ($request->hasFile('imagem')) {
-            $validated['imagem'] = $request->file('imagem')->store('produtos', 'public');
+            $validated['imagem'] = $request->file('imagem')->store('lojas/'.app(\App\Support\LojaContext::class)->id().'/produtos', 'public');
         }
 
         $validated['ordem'] = $validated['ordem'] ?? 0;
@@ -70,12 +71,12 @@ class ProdutoController extends Controller
     public function update(Request $request, Produto $produto)
     {
         $validated = $request->validate([
-            'categoria_id' => 'required|exists:categorias,id',
+            'categoria_id' => ['required', LojaValidation::exists('categorias')],
             'nome' => 'required|string|max:150',
             'descricao' => 'nullable|string',
             'preco' => 'required|numeric|min:0',
             'tempo_preparo' => 'required|integer|min:1',
-            'imagem' => 'nullable|image|max:2048',
+            'imagem' => 'nullable|image|max:4096',
             'ativo' => 'boolean',
             'destaque' => 'boolean',
             'ordem' => 'nullable|integer|min:0',
@@ -86,7 +87,7 @@ class ProdutoController extends Controller
             if ($produto->imagem) {
                 Storage::disk('public')->delete($produto->imagem);
             }
-            $validated['imagem'] = $request->file('imagem')->store('produtos', 'public');
+            $validated['imagem'] = $request->file('imagem')->store('lojas/'.app(\App\Support\LojaContext::class)->id().'/produtos', 'public');
         }
 
         $validated['ordem'] = $validated['ordem'] ?? 0;

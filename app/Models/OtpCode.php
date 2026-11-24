@@ -2,14 +2,16 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToLoja;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class OtpCode extends Model
 {
-    use HasFactory;
+    use HasFactory, BelongsToLoja;
 
     protected $fillable = [
+        'loja_id',
         'celular',
         'codigo',
         'tentativas',
@@ -31,7 +33,7 @@ class OtpCode extends Model
     {
         return self::create([
             'celular' => $celular,
-            'codigo' => str_pad(rand(0, 999999), 6, '0', STR_PAD_LEFT),
+            'codigo' => str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT),
             'expirado_em' => now()->addMinutes(5),
             'ip_address' => $ip,
         ]);

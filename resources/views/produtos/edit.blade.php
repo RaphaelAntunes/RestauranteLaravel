@@ -20,7 +20,7 @@
 
     <!-- Form -->
     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-200 dark:border-gray-700 p-6">
-        <form action="{{ route('produtos.update', $produto) }}" method="POST" enctype="multipart/form-data">
+        <form action="{{ route('produtos.update', ['produto' => $produto]) }}" method="POST" enctype="multipart/form-data">
             @csrf
             @method('PUT')
 

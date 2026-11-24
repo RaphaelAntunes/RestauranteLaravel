@@ -1,271 +1,77 @@
 @extends('layouts.cliente')
-
 @section('title', 'Cardápio')
-
 @section('content')
-<div class="min-h-screen bg-gray-900">
-    <!-- Top Navigation Bar -->
-    <nav class="bg-gray-800 border-b border-gray-700 sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-14 sm:h-16">
-                <!-- Logo & Nav Links -->
-                <div class="flex items-center gap-3 sm:gap-6">
-                    <a href="{{ route('cliente.cardapio') }}" class="flex items-center gap-2 text-white hover:text-red-400 transition">
-                        <div class="bg-gradient-to-r from-red-500 to-red-600 p-2 rounded-xl">
-                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
-                            </svg>
-                        </div>
-                        <span class="font-semibold hidden sm:inline">Cardápio</span>
-                    </a>
-
-                    @auth('cliente')
-                    <a href="{{ route('cliente.pedidos') }}" class="flex items-center gap-2 text-gray-400 hover:text-white transition">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
-                        </svg>
-                        <span class="hidden sm:inline">Meus Pedidos</span>
-                    </a>
-                    @endauth
-                </div>
-
-                <!-- Right Side -->
-                <div class="flex items-center gap-3 sm:gap-4">
-                    <!-- Cart -->
-                    <button onclick="abrirModalCarrinho()" class="relative p-2 text-gray-400 hover:text-white transition" id="nav-cart-btn">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
-                        </svg>
-                        <span id="nav-cart-count" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center hidden">0</span>
-                    </button>
-
-                    @auth('cliente')
-                    <div class="relative" x-data="{ open: false }">
-                        <button @click="open = !open" class="flex items-center gap-2 text-gray-400 hover:text-white transition">
-                            <div class="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                                </svg>
-                            </div>
-                            <span class="hidden sm:inline text-sm text-white">{{ auth('cliente')->user()->nome }}</span>
-                            <svg class="w-4 h-4 hidden sm:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                            </svg>
-                        </button>
-                        <div x-show="open" @click.away="open = false" x-cloak
-                             class="absolute right-0 mt-2 w-48 bg-gray-800 rounded-xl shadow-2xl border border-gray-700 py-2 z-50">
-                            <a href="{{ route('cliente.pedidos') }}" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition">
-                                Meus Pedidos
-                            </a>
-                            <form action="{{ route('cliente.logout') }}" method="POST">
-                                @csrf
-                                <button type="submit" class="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition">
-                                    Sair
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                    @else
-                    <a href="{{ route('cliente.login') }}" class="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-4 py-2 rounded-xl text-sm font-semibold transition shadow-lg">
-                        Entrar
-                    </a>
-                    @endauth
-                </div>
-            </div>
+<div class="db-menu">
+    <nav class="db-bar"><div class="db-wrap db-row">
+        <a href="{{ route('cliente.cardapio') }}" aria-label="{{ $lojaAtual->nome }}, início do cardápio"><x-dobra-brand/></a>
+        <div class="db-actions">
+            @auth('cliente')
+            <details class="db-account"><summary><x-dobra-icon name="person"/><span>Minha conta</span></summary><div>
+                <a href="{{ route('cliente.pedidos') }}">Meus pedidos</a>
+                <a href="{{ route('cliente.perfil.edit') }}">Meu perfil</a>
+                <a href="{{ route('cliente.enderecos.index') }}">Meus endereços</a>
+                <form method="POST" action="{{ route('cliente.logout') }}">@csrf<button>Sair</button></form>
+            </div></details>
+            @else
+            <a class="db-nav-link" href="{{ route('cliente.pedidos') }}"><x-dobra-icon name="bill"/>Meus pedidos</a>
+            @endauth
+            <button class="db-bag-link" onclick="abrirModalCarrinho()" id="nav-cart-btn" aria-label="Abrir sacola"><x-dobra-icon name="bag"/> Sacola <span id="nav-cart-count" class="hidden">0</span></button>
         </div>
-    </nav>
+    </div></nav>
+    @php
+        $casa = $lojaAtual->nome;
+        $aberto = $config->isDeliveryAberto();
+        $visiveis = $categorias->filter(fn ($categoria) => $categoria->produtosAtivos->isNotEmpty());
+        $heroBannerDesktop = $lojaAtual->banner_path
+            ? asset('storage/'.$lojaAtual->banner_path)
+            : asset('dobra/banner-padrao.avif');
+        $heroBannerMobile = $lojaAtual->banner_mobile_path
+            ? asset('storage/'.$lojaAtual->banner_mobile_path)
+            : $heroBannerDesktop;
+    @endphp
+    <header class="db-hero {{ $lojaAtual->exibir_textos_banner ? '' : 'db-hero-art-only' }}" style="--db-banner-desktop:url('{{ $heroBannerDesktop }}');--db-banner-mobile:url('{{ $heroBannerMobile }}')" aria-label="Banner da {{ $lojaAtual->nome }}"><div class="db-wrap db-hero-inner">
+    @if($lojaAtual->exibir_textos_banner)<div class="db-hero-copy">
+        @if($casa)<p>{{ $casa }}</p>@endif
+        <h1>{{ $lojaAtual->titulo_cardapio ?: 'Cardápio da casa' }}</h1>
+        <div class="db-meta"><span class="db-status">{{ $aberto ? 'Aberto para pedidos' : 'Pedidos fechados' }}</span>
+        @if($config->tempo_medio_preparo)<span><x-dobra-icon name="clock"/> Preparo: {{ $config->tempo_medio_preparo }} min</span>@endif</div>
+        @if($lojaAtual->descricao)<p style="max-width:36rem">{{ $lojaAtual->descricao }}</p>@endif
+    </div>@endif
+    </div></header>
 
-    <!-- Restaurant Header -->
-    <header class="bg-gray-800 border-b border-gray-700">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
-            <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                <div class="bg-gradient-to-r from-red-500 to-red-600 p-3 rounded-xl shadow-xl flex-shrink-0">
-                    <svg class="w-8 h-8 sm:w-10 sm:h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
-                    </svg>
-                </div>
-                <div class="flex-1 min-w-0">
-                    <h1 class="text-xl sm:text-2xl md:text-3xl font-bold text-white">
-                        {{ \App\Models\Configuracao::obter('nome_restaurante', 'Restaurante') }}
-                    </h1>
-                    <div class="flex flex-wrap items-center gap-3 sm:gap-4 text-xs sm:text-sm text-gray-400 mt-1">
-                        <span class="flex items-center gap-1.5">
-                            <svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
-                            <span>Abre às {{ $config->horario_inicio ? \Carbon\Carbon::parse($config->horario_inicio)->format('H:i') : '10:00' }}</span>
-                        </span>
-                        <span class="flex items-center gap-1.5">
-                            <svg class="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                            </svg>
-                            <span>{{ \App\Models\Configuracao::obter('cidade', 'Sua Cidade') }} - {{ \App\Models\Configuracao::obter('estado', 'UF') }}</span>
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </header>
-
-    <!-- Mobile Categories - Improved touch targets -->
-    <div class="lg:hidden bg-gray-800/95 backdrop-blur-sm border-b border-gray-700 sticky top-14 sm:top-16 z-40">
-        <div class="max-w-7xl mx-auto px-3">
-            <div class="flex gap-2 py-2.5 overflow-x-auto scrollbar-hide" id="categorias-mobile-container">
-                @foreach($categorias as $categoria)
-                    @if($categoria->produtosAtivos->count() > 0)
-                    <button type="button"
-                       onclick="scrollToCategoria('{{ $categoria->id }}')"
-                       class="touch-feedback flex-shrink-0 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all category-link-mobile
-                              bg-gray-700/80 text-gray-300 border border-gray-600 min-touch"
-                       data-categoria="{{ $categoria->id }}">
-                        {{ $categoria->nome }}
-                    </button>
-                    @endif
-                @endforeach
-            </div>
-        </div>
+    <div class="db-mobile-cats"><div class="db-wrap" id="categorias-mobile-container">
+        @foreach($visiveis as $categoria)<button type="button" class="category-link-mobile" data-categoria="{{ $categoria->id }}" onclick="scrollToCategoria('{{ $categoria->id }}')">{{ $categoria->nome }}</button>@endforeach
+    </div></div>
+    <div class="db-wrap db-catalog">
+        <aside class="db-index"><h2>No cardápio</h2><nav aria-label="Categorias">@foreach($visiveis as $categoria)
+            <a class="category-link" href="#categoria-{{ $categoria->id }}" data-categoria="{{ $categoria->id }}">{{ $categoria->nome }} <small>{{ $categoria->produtosAtivos->count() }}</small></a>
+        @endforeach</nav></aside>
+        <section class="db-dishes" aria-label="Produtos"><label class="db-search" for="search-input"><svg class="db-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="10" cy="10" r="6"/><path d="m15 15 6 6"/></svg><input type="search" id="search-input" placeholder="Buscar no cardápio" aria-label="Buscar no cardápio"></label>
+        <p id="db-no-results" class="db-empty" role="status" hidden>Nenhum prato encontrado. Tente outro nome.</p>
+        @forelse($visiveis as $categoria)
+            <section id="categoria-{{ $categoria->id }}" class="category-section"><h2>{{ $categoria->nome }}</h2>
+            @foreach($categoria->produtosAtivos as $produto)
+                @php
+                    $variavel = $produto->tamanhos->isNotEmpty();
+                    $tipo = \Illuminate\Support\Str::ascii(mb_strtolower($categoria->nome.' '.$produto->nome));
+                    $icone = match(true) {
+                        str_contains($tipo,'pizz') => 'pizza', str_contains($tipo,'bebida') => 'cup',
+                        str_contains($tipo,'batata') => 'fries', str_contains($tipo,'sobremesa') => 'dessert',
+                        str_contains($tipo,'salada') => 'leaf', default => 'plate'
+                    };
+                @endphp
+                <button type="button" class="product-card db-product" data-produto="{{ mb_strtolower($produto->nome) }}"
+                    onclick="@if($variavel) abrirModalPizza({{ $produto->id }}, {{ \Illuminate\Support\Js::from($produto->nome) }}, {{ \Illuminate\Support\Js::from($produto->tamanhos) }}, {{ \Illuminate\Support\Js::from($categoria->nome) }}) @else adicionarProdutoSimples({{ $produto->id }}, {{ \Illuminate\Support\Js::from($produto->nome) }}, {{ $produto->preco }}, this) @endif">
+                    <span class="db-thumb db-thumb-{{ $icone }}">@if($produto->imagem)<img src="{{ asset('storage/' . $produto->imagem) }}" alt="" loading="lazy">@else<x-dobra-icon :name="$icone"/>@endif</span>
+                    <span class="db-dish-copy"><strong>{{ $produto->nome }}</strong>@if($produto->descricao)<span>{{ $produto->descricao }}</span>@endif
+                        <b>@if($variavel)<small>A partir de </small>@endif R$ {{ number_format($variavel ? $produto->tamanhos->min('preco') : $produto->preco, 2, ',', '.') }}</b>
+                    </span><span class="db-add" aria-hidden="true">+</span>
+                </button>
+            @endforeach</section>
+        @empty<p class="db-empty">Ainda não há itens disponíveis no cardápio.</p>@endforelse
+        </section>
+        <aside class="db-ticket"><header><x-dobra-icon name="bill"/><h2>Sua sacola</h2></header><div id="sidebar-cart"><div id="sidebar-cart-content"></div></div></aside>
     </div>
-
-    <!-- Main Content -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
-        <div class="flex flex-col lg:flex-row gap-4 sm:gap-6">
-            <!-- Sidebar - Categories (Desktop) -->
-            <aside class="hidden lg:block w-64 flex-shrink-0">
-                <div class="bg-gray-800 rounded-xl border border-gray-700 p-4 sticky top-24">
-                    <h3 class="text-lg font-bold text-white mb-4">Categorias</h3>
-                    <nav class="space-y-1">
-                        @foreach($categorias as $categoria)
-                            @if($categoria->produtosAtivos->count() > 0)
-                            <a href="#categoria-{{ $categoria->id }}"
-                               class="flex items-center justify-between px-4 py-3 rounded-lg text-gray-300 border border-transparent hover:bg-gray-700/50 hover:border-red-500/30 hover:text-white transition-all category-link group"
-                               data-categoria="{{ $categoria->id }}">
-                                <span class="font-medium">{{ $categoria->nome }}</span>
-                                <span class="text-xs text-gray-500 group-hover:text-gray-400">{{ $categoria->produtosAtivos->count() }}</span>
-                            </a>
-                            @endif
-                        @endforeach
-                    </nav>
-                </div>
-            </aside>
-
-            <!-- Products -->
-            <section class="flex-1 min-w-0">
-                <!-- Search -->
-                <div class="mb-4 sm:mb-6">
-                    <div class="relative">
-                        <input type="text"
-                               id="search-input"
-                               placeholder="Busque por um produto"
-                               class="w-full pl-12 pr-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition">
-                        <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                        </svg>
-                    </div>
-                </div>
-
-                <!-- Products by Category -->
-                <div class="space-y-6 sm:space-y-8">
-                    @foreach($categorias as $categoria)
-                        @if($categoria->produtosAtivos->count() > 0)
-                        <div id="categoria-{{ $categoria->id }}" class="category-section scroll-mt-32">
-                            <div class="text-red-400 font-semibold mb-3 sticky top-28 sm:top-32 lg:top-4 bg-gray-900 py-2 z-10">
-                                {{ $categoria->nome }}
-                            </div>
-
-                            <div class="space-y-2">
-                                @foreach($categoria->produtosAtivos as $produto)
-                                <button type="button"
-                                   onclick="@if($produto->tamanhos->count() > 0) abrirModalPizza({{ $produto->id }}, '{{ addslashes($produto->nome) }}', {{ $produto->tamanhos->toJson() }}, '{{ addslashes($categoria->nome) }}') @else adicionarProdutoSimples({{ $produto->id }}, '{{ addslashes($produto->nome) }}', {{ $produto->preco }}) @endif"
-                                   class="w-full text-left bg-gray-800 hover:bg-gray-700/80 p-3 sm:p-4 rounded-xl border border-gray-700 hover:border-red-500/50 hover:shadow-lg transition-all duration-200 product-card"
-                                   data-produto="{{ strtolower($produto->nome) }}">
-                                    <div class="flex gap-3 sm:gap-4">
-                                        <!-- Product Image -->
-                                        <div class="flex-shrink-0 w-20 h-20 sm:w-24 sm:h-24 rounded-lg overflow-hidden bg-gray-700">
-                                            @if($produto->imagem)
-                                            <img src="{{ asset('storage/' . $produto->imagem) }}"
-                                                 alt="{{ $produto->nome }}"
-                                                 class="w-full h-full object-cover">
-                                            @else
-                                            <div class="w-full h-full flex items-center justify-center">
-                                                <svg class="w-8 h-8 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                                                </svg>
-                                            </div>
-                                            @endif
-                                        </div>
-
-                                        <!-- Product Info -->
-                                        <div class="flex-1 min-w-0 flex flex-col justify-between">
-                                            <div>
-                                                <h3 class="text-white font-medium text-sm sm:text-base break-words">{{ $produto->nome }}</h3>
-                                                @if($produto->descricao)
-                                                <p class="text-gray-400 text-xs sm:text-sm line-clamp-2 mt-1">{{ $produto->descricao }}</p>
-                                                @endif
-                                                @if($produto->tamanhos->count() > 0)
-                                                <span class="inline-flex mt-2 px-2 py-0.5 text-xs font-semibold rounded-full bg-orange-900/40 text-orange-300 border border-orange-800">
-                                                    {{ $produto->tamanhos->count() }} tamanhos
-                                                </span>
-                                                @endif
-                                            </div>
-                                            <div class="flex items-center justify-between mt-2">
-                                                <div class="text-green-400 font-bold text-sm sm:text-base">
-                                                    @if($produto->tamanhos->count() > 0)
-                                                    <span class="text-gray-500 font-normal text-xs">A partir de </span>R$ {{ number_format($produto->tamanhos->min('preco'), 2, ',', '.') }}
-                                                    @else
-                                                    R$ {{ number_format($produto->preco, 2, ',', '.') }}
-                                                    @endif
-                                                </div>
-                                                <div class="bg-gradient-to-r from-red-500 to-red-600 text-white p-2 rounded-lg">
-                                                    <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                                                    </svg>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </button>
-                                @endforeach
-                            </div>
-                        </div>
-                        @endif
-                    @endforeach
-                </div>
-            </section>
-
-            <!-- Sidebar - Cart (Desktop) -->
-            <aside class="hidden lg:block w-80 flex-shrink-0">
-                <div class="sticky top-24 space-y-4">
-                    <!-- Cart -->
-                    <div class="bg-gray-800 border border-gray-700 rounded-xl p-4 sm:p-5" id="sidebar-cart">
-                        <div id="sidebar-cart-content">
-                            <!-- Preenchido via JS -->
-                        </div>
-
-                        <!-- Coupon -->
-                        <div class="mt-4 pt-4 border-t border-gray-700">
-                            <button class="flex items-center justify-between w-full p-3 rounded-lg hover:bg-gray-700/50 transition group">
-                                <div class="flex items-center gap-3">
-                                    <div class="bg-gray-700 p-2 rounded-lg">
-                                        <svg class="w-4 h-4 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
-                                        </svg>
-                                    </div>
-                                    <div class="text-left">
-                                        <p class="text-sm font-medium text-white">Tem um cupom?</p>
-                                        <p class="text-xs text-gray-500">Clique para adicionar</p>
-                                    </div>
-                                </div>
-                                <svg class="w-4 h-4 text-gray-500 group-hover:text-white transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </aside>
-        </div>
-    </main>
 
     <!-- Mobile Cart Button - Fixed at bottom with safe area -->
     <div id="mobile-cart-btn" class="lg:hidden fixed bottom-0 left-0 right-0 p-3 bg-gray-900/98 backdrop-blur-lg border-t border-gray-700 z-50 hidden safe-bottom">
@@ -287,6 +93,13 @@
             </div>
         </button>
     </div>
+
+    @if($whatsappLink = $lojaAtual->whatsappLink())
+        <a class="db-whatsapp-float" href="{{ $whatsappLink }}" target="_blank" rel="noopener noreferrer" aria-label="Conversar com {{ $lojaAtual->nome }} pelo WhatsApp">
+            <svg viewBox="0 0 32 32" aria-hidden="true"><path fill="currentColor" d="M16.04 3C8.86 3 3.02 8.82 3.02 15.98c0 2.29.6 4.53 1.74 6.5L3 29l6.67-1.75a13.02 13.02 0 0 0 6.36 1.62h.01C23.2 28.87 29 23.04 29 15.98 29 8.82 23.2 3 16.04 3Zm7.63 18.34c-.32.9-1.87 1.71-2.58 1.82-.66.1-1.5.15-2.42-.15-.56-.18-1.29-.42-2.22-.82-3.9-1.68-6.44-5.6-6.64-5.87-.2-.26-1.58-2.1-1.58-4s.99-2.84 1.34-3.23c.35-.39.76-.49 1.02-.49h.73c.23.01.55-.08.86.66.32.77 1.09 2.66 1.18 2.85.1.2.16.43.03.69-.13.26-.2.42-.39.65-.2.23-.41.51-.58.68-.2.2-.4.41-.17.8.23.39 1.02 1.68 2.19 2.72 1.5 1.34 2.77 1.76 3.16 1.95.39.2.62.16.85-.1.23-.26.99-1.15 1.25-1.54.26-.39.52-.32.88-.2.36.13 2.3 1.09 2.69 1.28.39.2.65.29.75.45.1.16.1.94-.22 1.84Z"/></svg>
+            <span>Fale com a loja</span>
+        </a>
+    @endif
 </div>
 
 <!-- Modal de Seleção de Pizza -->
@@ -364,132 +177,69 @@
     </div>
 </div>
 
-<!-- Modal de Produto Simples -->
-<div id="modalSimples" class="modal hidden fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4" onclick="fecharModalSimples()">
-    <div class="bg-gray-800 rounded-2xl max-w-md w-full overflow-hidden border border-gray-700 shadow-2xl" onclick="event.stopPropagation()">
-        <!-- Header -->
-        <div class="p-4 sm:p-6 border-b border-gray-700 bg-gradient-to-r from-red-500 to-orange-500">
-            <div class="flex justify-between items-center gap-3">
-                <h3 class="text-lg sm:text-xl font-bold text-white" id="modalSimplesNome">Produto</h3>
-                <button onclick="fecharModalSimples()" class="text-white hover:bg-white/20 rounded-lg p-1.5 transition">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
-            </div>
-        </div>
-
-        <div class="p-4 sm:p-6 space-y-4">
-            <div class="text-center">
-                <p class="text-gray-400 text-sm mb-2">Preço unitário</p>
-                <p class="text-green-400 font-bold text-2xl" id="modalSimplesPreco">R$ 0,00</p>
-            </div>
-
-            <!-- Quantidade -->
-            <div>
-                <h4 class="text-sm font-semibold text-white mb-3">Quantidade</h4>
-                <div class="flex items-center justify-center space-x-5">
-                    <button type="button" onclick="alterarQuantidadeSimples(-1)" class="touch-feedback w-14 h-14 rounded-xl bg-gray-700 hover:bg-gray-600 flex items-center justify-center text-white font-bold transition shadow-lg">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M20 12H4"></path>
-                        </svg>
-                    </button>
-                    <span id="simples-quantidade" class="text-white font-bold text-3xl w-16 text-center">1</span>
-                    <button type="button" onclick="alterarQuantidadeSimples(1)" class="touch-feedback w-14 h-14 rounded-xl bg-gray-700 hover:bg-gray-600 flex items-center justify-center text-white font-bold transition shadow-lg">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path>
-                        </svg>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Observações -->
-            <div>
-                <label for="simples-observacoes" class="block text-xs sm:text-sm font-medium text-white mb-2">Observações</label>
-                <textarea id="simples-observacoes" rows="2" class="w-full px-3 py-2 text-sm bg-gray-700 border border-gray-600 rounded-lg text-gray-100 focus:ring-2 focus:ring-red-500" placeholder="Ex: Sem gelo, bem passado, etc"></textarea>
-            </div>
-        </div>
-
-        <!-- Footer -->
-        <div class="p-4 border-t border-gray-700 safe-bottom">
-            <div class="flex flex-col gap-3">
-                <div class="flex justify-between items-center">
-                    <span class="text-gray-400">Total:</span>
-                    <span class="text-white font-bold text-2xl" id="simples-preco-total">R$ 0,00</span>
-                </div>
-                <button onclick="confirmarProdutoSimples()" id="btn-adicionar-simples" class="touch-feedback w-full py-4 bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-xl font-bold shadow-lg shadow-red-500/30 transition text-base">
-                    Adicionar ao Carrinho
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
+@include('cliente.cardapio.ficha-item')
 
 <!-- Toast Container - Centered on mobile, right on desktop -->
 <div id="toast-container" class="fixed top-20 left-4 right-4 sm:left-auto sm:right-4 sm:w-80 z-[100] space-y-2 pointer-events-none"></div>
 
 <!-- Modal do Carrinho -->
-<div id="modalCarrinho" class="modal hidden fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4" onclick="fecharModalCarrinho()">
-    <div class="bg-gray-800 rounded-2xl max-w-lg w-full max-h-[95vh] sm:max-h-[90vh] overflow-hidden border border-gray-700 shadow-2xl flex flex-col" onclick="event.stopPropagation()">
+<div id="modalCarrinho" class="modal db-cart-modal hidden fixed inset-0 flex items-center justify-center z-50 p-2 sm:p-4" onclick="fecharModalCarrinho()">
+    <div class="db-cart-panel" role="dialog" aria-modal="true" aria-labelledby="carrinho-titulo" onclick="event.stopPropagation()">
         <!-- Header -->
-        <div class="p-4 sm:p-6 border-b border-gray-700 bg-gradient-to-r from-red-500 to-orange-500 flex-shrink-0">
-            <div class="flex justify-between items-center">
-                <div class="flex items-center gap-3">
-                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <header class="db-cart-header">
+            <div class="db-cart-heading">
+                <span class="db-cart-icon" aria-hidden="true">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
                     </svg>
-                    <h3 class="text-lg sm:text-xl font-bold text-white">Meu Carrinho</h3>
-                </div>
-                <button onclick="fecharModalCarrinho()" class="text-white hover:bg-white/20 rounded-lg p-1.5 sm:p-2 transition">
-                    <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
+                </span>
+                <div><h3 id="carrinho-titulo">Minha sacola</h3><p>Revise os itens antes de continuar</p></div>
             </div>
-        </div>
+            <button type="button" onclick="fecharModalCarrinho()" class="db-cart-close" aria-label="Fechar sacola">×</button>
+        </header>
 
         <!-- Body -->
-        <div class="flex-1 overflow-y-auto p-4" id="carrinho-body">
+        <div class="db-cart-body" id="carrinho-body">
             <div class="text-center py-8" id="carrinho-loading">
-                <svg class="animate-spin h-8 w-8 mx-auto text-red-500" fill="none" viewBox="0 0 24 24">
+                <svg class="animate-spin h-8 w-8 mx-auto text-blue-700" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                <p class="text-gray-400 mt-2">Carregando...</p>
+                <p class="db-cart-muted mt-2">Carregando sua sacola...</p>
             </div>
             <div id="carrinho-vazio" class="hidden text-center py-8">
-                <svg class="mx-auto w-16 h-16 text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="mx-auto w-16 h-16 db-cart-empty-icon mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
                 </svg>
-                <p class="text-gray-400 font-medium mb-1">Seu carrinho está vazio</p>
-                <p class="text-gray-500 text-sm">Adicione produtos para continuar</p>
+                <p class="db-cart-empty-title">Sua sacola está vazia</p>
+                <p class="db-cart-muted text-sm">Escolha um item do cardápio para começar.</p>
             </div>
-            <div id="carrinho-itens" class="space-y-3 hidden"></div>
+            <div id="carrinho-itens" class="db-cart-items hidden"></div>
         </div>
 
         <!-- Footer -->
-        <div class="p-4 border-t border-gray-700 bg-gray-800/50 flex-shrink-0 safe-bottom" id="carrinho-footer">
+        <footer class="db-cart-footer safe-bottom" id="carrinho-footer">
             <div id="carrinho-resumo" class="hidden">
-                <div class="space-y-2 mb-4">
-                    <div class="flex justify-between text-gray-400 text-sm">
+                <div class="db-cart-summary">
+                    <div>
                         <span>Subtotal</span>
                         <span id="carrinho-subtotal">R$ 0,00</span>
                     </div>
-                    <div class="flex justify-between text-gray-400 text-sm">
+                    <div>
                         <span>Taxa de entrega</span>
                         <span id="carrinho-taxa">R$ 0,00</span>
                     </div>
-                    <div class="flex justify-between text-white font-bold text-xl pt-3 border-t border-gray-700">
+                    <div class="db-cart-total">
                         <span>Total</span>
                         <span id="carrinho-total">R$ 0,00</span>
                     </div>
                 </div>
-                <button onclick="abrirCheckout()" id="btn-checkout" class="touch-feedback w-full py-4 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl font-bold shadow-lg shadow-green-500/30 transition text-base disabled:opacity-50 disabled:shadow-none">
+                <button onclick="abrirCheckout()" id="btn-checkout" class="touch-feedback db-cart-checkout">
                     Finalizar Pedido
                 </button>
-                <p id="pedido-minimo-aviso" class="text-yellow-400 text-sm text-center mt-3 hidden"></p>
+                <p id="pedido-minimo-aviso" class="db-cart-warning hidden"></p>
             </div>
-        </div>
+        </footer>
     </div>
 </div>
 
@@ -515,6 +265,14 @@
 
         <!-- Body -->
         <div class="flex-1 overflow-y-auto p-4 space-y-4" id="checkout-body">
+            <div id="nome-cliente-section" class="hidden">
+                <label for="checkout-nome-cliente" class="text-white font-semibold mb-2 block">Como podemos chamar você?</label>
+                <input id="checkout-nome-cliente" type="text" maxlength="100" autocomplete="name"
+                       class="w-full px-3 py-3 bg-gray-700 border border-gray-600 rounded-lg text-gray-100 focus:ring-2 focus:ring-green-500"
+                       placeholder="Digite seu nome">
+                <p class="text-gray-400 text-xs mt-2">Você só precisa informar uma vez.</p>
+            </div>
+
             <!-- Tipo de Pedido -->
             <div>
                 <h4 class="text-white font-semibold mb-3">Como você quer receber?</h4>
@@ -665,7 +423,7 @@
             </div>
             <h3 class="text-xl font-bold text-white mb-2">Login Necessário</h3>
             <p class="text-gray-400 mb-6">Faça login para finalizar seu pedido</p>
-            <a href="{{ route('cliente.login') }}" class="block w-full py-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-xl font-bold transition">
+            <a href="{{ route('cliente.login', ['origem' => 'checkout']) }}" class="block w-full py-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-xl font-bold transition">
                 Fazer Login
             </a>
             <button onclick="fecharModalLogin()" class="w-full mt-3 py-2 text-gray-400 hover:text-white transition">
@@ -734,7 +492,7 @@
     }
     .product-card:active {
         transform: scale(0.98);
-        background-color: rgba(55, 65, 81, 0.8) !important;
+        background-color: #e8ece9;
     }
 
     /* Improved toast animations */
@@ -825,11 +583,159 @@
         50% { transform: scale(1.2) rotate(-45deg); }
         100% { transform: scale(1) rotate(0deg); opacity: 1; }
     }
+
+    /* A sacola usa a mesma linguagem clara e direta da ficha do produto. */
+    .db-cart-modal {
+        color-scheme: light;
+        background: rgb(24 30 52 / 45%);
+        backdrop-filter: blur(3px);
+    }
+    .db-cart-panel {
+        width: min(520px, calc(100% - 32px));
+        max-height: 90vh;
+        max-height: 90dvh;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        border: 1px solid var(--linha);
+        border-radius: 22px;
+        background: var(--papel);
+        color: var(--tinta);
+        box-shadow: 0 18px 70px #131c4229;
+    }
+    .db-cart-header,
+    .db-cart-heading,
+    .db-cart-summary > div,
+    .db-cart-item-top,
+    .db-cart-item-bottom,
+    .db-cart-stepper {
+        display: flex;
+        align-items: center;
+    }
+    .db-cart-header {
+        flex: none;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 20px 22px 16px;
+        border-bottom: 1px solid var(--linha);
+    }
+    .db-cart-heading { gap: 12px; min-width: 0; }
+    .db-cart-heading h3 {
+        font: 750 1.55rem/1.05 var(--display);
+        letter-spacing: -.04em;
+    }
+    .db-cart-heading p { margin-top: 3px; color: var(--sec); font-size: .82rem; }
+    .db-cart-icon {
+        width: 46px;
+        height: 46px;
+        flex: none;
+        display: grid;
+        place-items: center;
+        border-radius: 14px 9px 14px 9px;
+        background: var(--manteiga);
+        color: #75521b;
+    }
+    .db-cart-icon svg { width: 23px; height: 23px; }
+    .db-cart-close {
+        width: 44px;
+        height: 44px;
+        flex: none;
+        border: 1px solid var(--linha);
+        border-radius: 50%;
+        background: #fff;
+        color: var(--sec);
+        font: 400 26px/1 var(--texto);
+    }
+    .db-cart-close:hover { border-color: #b6bed9; color: var(--louca); }
+    .db-cart-body {
+        min-height: 0;
+        flex: 1;
+        overflow-y: auto;
+        padding: 18px 22px;
+        background: #fafbf9;
+        overscroll-behavior: contain;
+    }
+    .db-cart-muted { color: var(--sec); }
+    .db-cart-empty-icon { color: #a9b1bd; }
+    .db-cart-empty-title { margin-bottom: 4px; font-weight: 700; color: var(--tinta); }
+    .db-cart-items { display: grid; gap: 12px; }
+    .db-cart-item {
+        padding: 14px;
+        border: 1px solid var(--linha);
+        border-radius: 16px;
+        background: #fff;
+    }
+    .db-cart-item-top { align-items: flex-start; gap: 12px; }
+    .db-cart-item-thumb {
+        width: 66px;
+        height: 66px;
+        flex: none;
+        display: grid;
+        place-items: center;
+        overflow: hidden;
+        border-radius: 17px 10px 17px 10px;
+        background: #ffe6a8;
+        color: #8a6b2e;
+    }
+    .db-cart-item-thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .db-cart-item-thumb svg { width: 28px; height: 28px; }
+    .db-cart-item-copy { flex: 1; min-width: 0; }
+    .db-cart-item-title { font: 720 1rem/1.25 var(--display); letter-spacing: -.02em; overflow-wrap: anywhere; }
+    .db-cart-item-detail { margin-top: 2px; color: var(--sec); font-size: .82rem; line-height: 1.35; }
+    .db-cart-item-note { margin-top: 5px; color: #75521b; font-size: .78rem; font-style: italic; }
+    .db-cart-remove {
+        width: 40px;
+        height: 40px;
+        flex: none;
+        display: grid;
+        place-items: center;
+        border-radius: 50%;
+        color: #7a8391;
+    }
+    .db-cart-remove:hover { background: #fff0ed; color: #923b30; }
+    .db-cart-remove svg { width: 18px; height: 18px; }
+    .db-cart-item-bottom {
+        justify-content: space-between;
+        gap: 16px;
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px solid var(--linha);
+    }
+    .db-cart-stepper { overflow: hidden; border: 1px solid #c4cbe3; border-radius: 12px; }
+    .db-cart-stepper button { width: 42px; height: 40px; color: var(--louca); font-size: 1.35rem; }
+    .db-cart-stepper button:hover { background: #eff1ff; }
+    .db-cart-stepper output { min-width: 32px; text-align: center; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .db-cart-price { color: var(--louca); font-weight: 750; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .db-cart-footer { flex: none; padding: 15px 22px 20px; border-top: 1px solid var(--linha); background: #fff; }
+    .db-cart-summary { display: grid; gap: 8px; margin-bottom: 14px; }
+    .db-cart-summary > div { justify-content: space-between; gap: 20px; color: var(--sec); font-size: .88rem; }
+    .db-cart-summary .db-cart-total { margin-top: 2px; padding-top: 12px; border-top: 1px solid var(--linha); color: var(--tinta); font: 750 1.25rem/1.2 var(--display); }
+    .db-cart-checkout {
+        width: 100%;
+        min-height: 50px;
+        padding: 10px 16px;
+        border-radius: 12px;
+        background: var(--louca);
+        color: #fff;
+        font-weight: 700;
+    }
+    .db-cart-checkout:hover { background: #20328e; }
+    .db-cart-checkout:disabled { opacity: .48; box-shadow: none; }
+    .db-cart-warning { margin-top: 10px; color: #8b5c12; text-align: center; font-size: .84rem; }
+    @media (max-width: 640px) {
+        .db-cart-modal { align-items: flex-end; padding: 0; }
+        .db-cart-panel { width: 100%; max-width: none; max-height: 94vh; max-height: 94dvh; border-width: 1px 0 0; border-radius: 22px 22px 0 0; }
+        .db-cart-header { padding: 16px 18px 13px; }
+        .db-cart-body { padding: 14px 18px; }
+        .db-cart-footer { padding: 13px 18px max(14px, env(safe-area-inset-bottom)); }
+        .db-cart-heading h3 { font-size: 1.35rem; }
+        .db-cart-heading p { display: none; }
+    }
 </style>
 @endpush
 
 @push('scripts')
-<script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+{{-- Native details handles the account menu without an external script. --}}
 <script>
 // Estado global
 let cartCount = 0;
@@ -860,6 +766,20 @@ const saboresDisponiveis = @json($sabores);
 // Carregar info do carrinho ao iniciar
 document.addEventListener('DOMContentLoaded', function() {
     atualizarCarrinhoInfo();
+
+    const pagina = new URL(window.location.href);
+    if (pagina.searchParams.get('checkout') === '1') {
+        pagina.searchParams.delete('checkout');
+        window.history.replaceState({}, '', pagina.pathname + pagina.search + pagina.hash);
+
+        carregarCarrinho().then(() => {
+            if (carrinhoData?.itens?.length) {
+                abrirCheckout();
+            } else {
+                showToast('Sua sacola está vazia', 'warning');
+            }
+        });
+    }
 });
 
 // Função para atualizar info do carrinho via AJAX
@@ -897,43 +817,10 @@ function atualizarUICarrinho() {
         mobileBtn.classList.add('hidden');
     }
 
-    // Sidebar cart
     const sidebarContent = document.getElementById('sidebar-cart-content');
-    if (cartCount > 0) {
-        sidebarContent.innerHTML = `
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-bold text-white">Carrinho</h3>
-                <span class="bg-red-500/20 text-red-400 text-xs font-bold px-2.5 py-1 rounded-full border border-red-500/30">
-                    ${cartCount} ${cartCount == 1 ? 'item' : 'itens'}
-                </span>
-            </div>
-
-            <div class="bg-gradient-to-r from-green-600 to-green-700 rounded-lg p-4 mb-4">
-                <div class="flex justify-between items-center">
-                    <span class="text-white font-bold">Total:</span>
-                    <span class="text-white font-bold text-2xl">${formatarPreco(cartTotal)}</span>
-                </div>
-            </div>
-
-            <button onclick="abrirModalCarrinho()"
-               class="flex items-center justify-center gap-2 w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white py-3 rounded-xl font-bold transition-all shadow-xl hover:shadow-2xl active:scale-95">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
-                </svg>
-                Ver Carrinho
-            </button>
-        `;
-    } else {
-        sidebarContent.innerHTML = `
-            <div class="text-center py-8">
-                <svg class="mx-auto w-16 h-16 text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
-                </svg>
-                <p class="text-gray-400 font-medium mb-1">Sacola vazia</p>
-                <p class="text-gray-500 text-sm">Adicione produtos ao carrinho</p>
-            </div>
-        `;
-    }
+    sidebarContent.innerHTML = cartCount > 0
+        ? `<p>${cartCount} ${cartCount == 1 ? 'item' : 'itens'}</p><strong>${formatarPreco(cartTotal)}</strong><button class="db-primary" onclick="abrirModalCarrinho()">Ver sacola</button>`
+        : '<p>A sacola está vazia</p><small>Escolha um prato para começar seu pedido.</small>';
 }
 
 // ========== MODAL CARRINHO ==========
@@ -942,6 +829,11 @@ let checkoutData = null;
 let tipoPedidoSelecionado = null;
 let enderecoSelecionado = null;
 let pedidoAtual = null;
+const carrinhoItemUrl = @json(route('cliente.carrinho.atualizar', ['loja' => $lojaAtual->slug, 'item' => '__ITEM__']));
+
+function urlDoItemNoCarrinho(itemId) {
+    return carrinhoItemUrl.replace('__ITEM__', encodeURIComponent(itemId));
+}
 
 function abrirModalCarrinho() {
     document.getElementById('modalCarrinho').classList.remove('hidden');
@@ -960,7 +852,7 @@ function carregarCarrinho() {
     document.getElementById('carrinho-itens').classList.add('hidden');
     document.getElementById('carrinho-resumo').classList.add('hidden');
 
-    fetch('{{ route("cliente.carrinho.data") }}')
+    return fetch('{{ route("cliente.carrinho.data") }}')
         .then(response => response.json())
         .then(data => {
             carrinhoData = data;
@@ -986,41 +878,33 @@ function renderizarCarrinho() {
 
     const itensContainer = document.getElementById('carrinho-itens');
     itensContainer.innerHTML = carrinhoData.itens.map(item => `
-        <div class="bg-gray-700/50 rounded-2xl p-4">
-            <div class="flex gap-3">
-                <div class="w-20 h-20 flex-shrink-0 rounded-xl overflow-hidden bg-gray-600">
+        <article class="db-cart-item">
+            <div class="db-cart-item-top">
+                <div class="db-cart-item-thumb">
                     ${item.produto_imagem ?
-                        `<img src="${item.produto_imagem}" alt="${item.produto_nome}" class="w-full h-full object-cover">` :
-                        `<div class="w-full h-full flex items-center justify-center"><svg class="w-8 h-8 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg></div>`
+                        `<img src="${item.produto_imagem}" alt="${item.produto_nome}">` :
+                        `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>`
                     }
                 </div>
-                <div class="flex-1 min-w-0">
-                    <div class="flex justify-between items-start">
-                        <h4 class="text-white font-semibold text-base pr-2">${item.produto_nome}</h4>
-                        <button onclick="removerItem(${item.id})" class="touch-feedback text-gray-500 hover:text-red-400 transition p-2 -mr-2 -mt-1 min-touch">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                            </svg>
-                        </button>
-                    </div>
-                    ${item.tamanho_nome ? `<p class="text-gray-400 text-sm">Tamanho ${item.tamanho_nome}</p>` : ''}
-                    ${item.sabores ? `<p class="text-gray-400 text-sm truncate">${item.sabores}</p>` : ''}
-                    ${item.observacoes ? `<p class="text-yellow-400/80 text-xs italic mt-1">${item.observacoes}</p>` : ''}
+                <div class="db-cart-item-copy">
+                    <h4 class="db-cart-item-title">${item.produto_nome}</h4>
+                    ${item.tamanho_nome ? `<p class="db-cart-item-detail">Tamanho ${item.tamanho_nome}</p>` : ''}
+                    ${item.sabores ? `<p class="db-cart-item-detail">${item.sabores}</p>` : ''}
+                    ${item.observacoes ? `<p class="db-cart-item-note">${item.observacoes}</p>` : ''}
                 </div>
+                <button type="button" onclick="removerItem(${item.id})" class="touch-feedback db-cart-remove" aria-label="Remover ${item.produto_nome} da sacola">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
             </div>
-            <div class="flex items-center justify-between mt-3 pt-3 border-t border-gray-600">
-                <div class="flex items-center gap-3">
-                    <button onclick="alterarQuantidadeItem(${item.id}, -1)" class="touch-feedback w-10 h-10 rounded-xl bg-gray-600 hover:bg-gray-500 flex items-center justify-center text-white transition">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M20 12H4"></path></svg>
-                    </button>
-                    <span class="text-white font-bold text-lg w-8 text-center">${item.quantidade}</span>
-                    <button onclick="alterarQuantidadeItem(${item.id}, 1)" class="touch-feedback w-10 h-10 rounded-xl bg-gray-600 hover:bg-gray-500 flex items-center justify-center text-white transition">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
-                    </button>
+            <div class="db-cart-item-bottom">
+                <div class="db-cart-stepper" role="group" aria-label="Quantidade de ${item.produto_nome}">
+                    <button type="button" onclick="alterarQuantidadeItem(${item.id}, -1)" aria-label="Diminuir quantidade">−</button>
+                    <output aria-live="polite">${item.quantidade}</output>
+                    <button type="button" onclick="alterarQuantidadeItem(${item.id}, 1)" aria-label="Aumentar quantidade">+</button>
                 </div>
-                <span class="text-green-400 font-bold text-lg">${formatarPreco(item.subtotal)}</span>
+                <strong class="db-cart-price">${formatarPreco(item.subtotal)}</strong>
             </div>
-        </div>
+        </article>
     `).join('');
 
     itensContainer.classList.remove('hidden');
@@ -1050,7 +934,7 @@ function alterarQuantidadeItem(itemId, delta) {
     const novaQtd = item.quantidade + delta;
     if (novaQtd < 1 || novaQtd > 10) return;
 
-    fetch(`/cliente/carrinho/${itemId}`, {
+    fetch(urlDoItemNoCarrinho(itemId), {
         method: 'PUT',
         headers: {
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
@@ -1074,7 +958,7 @@ function alterarQuantidadeItem(itemId, delta) {
 }
 
 function removerItem(itemId) {
-    fetch(`/cliente/carrinho/${itemId}`, {
+    fetch(urlDoItemNoCarrinho(itemId), {
         method: 'DELETE',
         headers: {
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
@@ -1127,6 +1011,10 @@ function carregarDadosCheckout() {
         .then(response => response.json())
         .then(data => {
             checkoutData = data;
+            const nomeSection = document.getElementById('nome-cliente-section');
+            const nomeInput = document.getElementById('checkout-nome-cliente');
+            nomeSection.classList.toggle('hidden', !data.cliente?.precisa_nome);
+            nomeInput.value = data.cliente?.nome || '';
             renderizarEnderecos();
             atualizarResumoCheckout();
         })
@@ -1201,6 +1089,14 @@ function abrirNovoEndereco() {
 }
 
 function finalizarPedido() {
+    const precisaNome = checkoutData?.cliente?.precisa_nome === true;
+    const nomeCliente = document.getElementById('checkout-nome-cliente').value.trim();
+    if (precisaNome && nomeCliente.length < 2) {
+        document.getElementById('checkout-nome-cliente').focus();
+        showToast('Informe seu nome para finalizar o pedido', 'warning');
+        return;
+    }
+
     if (!tipoPedidoSelecionado) {
         showToast('Selecione o tipo de pedido', 'warning');
         return;
@@ -1217,6 +1113,9 @@ function finalizarPedido() {
 
     const formData = new FormData();
     formData.append('tipo_pedido', tipoPedidoSelecionado);
+    if (precisaNome) {
+        formData.append('nome_cliente', nomeCliente);
+    }
     if (enderecoSelecionado) {
         formData.append('cliente_endereco_id', enderecoSelecionado);
     }
@@ -1240,15 +1139,12 @@ function finalizarPedido() {
     .then(data => {
         if (data.success) {
             pedidoAtual = data.pedido_id;
-            fecharModalCheckout();
-            abrirModalAcompanhamento(data.pedido_id);
-            showToast('Pedido realizado com sucesso!', 'success');
-
-            // Limpar carrinho local
             cartCount = 0;
             cartTotal = 0;
             carrinhoData = null;
             atualizarUICarrinho();
+
+            window.location.assign(data.redirect_url);
         } else {
             showToast(data.message || 'Erro ao finalizar pedido', 'error');
         }
@@ -1288,8 +1184,21 @@ function fecharModalAcompanhamento() {
 function carregarStatusPedido() {
     if (!pedidoAtual) return;
 
-    fetch(`/cliente/pedido/${pedidoAtual}/status`)
-        .then(response => response.json())
+    const statusUrl = @json(route('cliente.pedido.status', ['loja' => $lojaAtual->slug, 'pedido' => '__PEDIDO_ID__']))
+        .replace('__PEDIDO_ID__', encodeURIComponent(pedidoAtual));
+
+    fetch(statusUrl, {
+        headers: {
+            'Accept': 'application/json'
+        }
+    })
+        .then(async response => {
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.message || data.error || 'Não foi possível carregar o pedido');
+            }
+            return data;
+        })
         .then(data => {
             if (data.success) {
                 renderizarAcompanhamento(data.pedido);
@@ -1381,72 +1290,77 @@ function formatarPreco(valor) {
 }
 
 // ========== PRODUTO SIMPLES ==========
-function adicionarProdutoSimples(id, nome, preco) {
-    simplesAtual = {
-        produtoId: id,
-        produtoNome: nome,
-        preco: preco,
-        quantidade: 1
-    };
-
+const fichaItem = document.getElementById('modalSimples');
+let fichaOrigem;
+function adicionarProdutoSimples(id, nome, preco, origem) {
+    simplesAtual = { produtoId: id, produtoNome: nome, preco: preco, quantidade: 1 };
+    fichaOrigem = origem;
+    document.getElementById('ficha-miniatura').replaceChildren(origem.querySelector('.db-thumb').cloneNode(true));
+    const descricao = document.getElementById('ficha-descricao');
+    descricao.textContent = origem.querySelector('.db-dish-copy > span')?.textContent.trim() || '';
+    descricao.hidden = !descricao.textContent;
     document.getElementById('modalSimplesNome').textContent = nome;
     document.getElementById('modalSimplesPreco').textContent = formatarPreco(preco);
-    document.getElementById('simples-quantidade').textContent = 1;
-    document.getElementById('simples-preco-total').textContent = formatarPreco(preco);
     document.getElementById('simples-observacoes').value = '';
-    document.getElementById('modalSimples').classList.remove('hidden');
+    document.getElementById('ficha-erro').hidden = true;
+    atualizarFicha();
+    fichaItem.showModal();
     document.body.style.overflow = 'hidden';
 }
-
-function fecharModalSimples() {
-    document.getElementById('modalSimples').classList.add('hidden');
-    document.body.style.overflow = 'auto';
+function fecharModalSimples() { fichaItem.close(); }
+fichaItem.addEventListener('close', () => {
+    document.body.style.overflow = '';
+    fichaOrigem?.focus({preventScroll:true});
+});
+fichaItem.addEventListener('click', event => {
+    if(event.target !== fichaItem) return;
+    const r = fichaItem.getBoundingClientRect();
+    if(event.clientX < r.left || event.clientX > r.right || event.clientY < r.top || event.clientY > r.bottom) fecharModalSimples();
+});
+function atualizarFicha() {
+    const { quantidade, preco, enviando } = simplesAtual;
+    document.getElementById('simples-quantidade').textContent = quantidade;
+    document.getElementById('simples-preco-total').textContent = formatarPreco(preco * quantidade);
+    document.getElementById('ficha-menos').disabled = quantidade <= 1 || !!enviando;
+    document.getElementById('ficha-mais').disabled = quantidade >= 10 || !!enviando;
+    document.getElementById('btn-adicionar-simples').disabled = !!enviando;
+    document.getElementById('ficha-acao').textContent = enviando ? 'Adicionando…' : 'Adicionar à sacola';
 }
-
 function alterarQuantidadeSimples(delta) {
     simplesAtual.quantidade = Math.max(1, Math.min(10, simplesAtual.quantidade + delta));
-    document.getElementById('simples-quantidade').textContent = simplesAtual.quantidade;
-    document.getElementById('simples-preco-total').textContent = formatarPreco(simplesAtual.preco * simplesAtual.quantidade);
+    atualizarFicha();
 }
-
-function confirmarProdutoSimples() {
-    const btn = document.getElementById('btn-adicionar-simples');
-    btn.disabled = true;
-    btn.innerHTML = '<svg class="animate-spin h-5 w-5 inline-block" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>';
-
+async function confirmarProdutoSimples() {
+    const item = simplesAtual;
+    if (item.enviando) return;
+    item.enviando = true;
+    atualizarFicha();
+    const erro = document.getElementById('ficha-erro');
+    erro.hidden = true;
     const formData = new FormData();
-    formData.append('produto_id', simplesAtual.produtoId);
-    formData.append('quantidade', simplesAtual.quantidade);
+    formData.append('produto_id', item.produtoId);
+    formData.append('quantidade', item.quantidade);
     formData.append('observacoes', document.getElementById('simples-observacoes').value);
-
-    fetch('{{ route("cliente.carrinho.adicionar.publico") }}', {
-        method: 'POST',
-        headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-            'Accept': 'application/json'
-        },
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            cartCount = data.cart_count;
-            cartTotal = data.cart_total;
-            atualizarUICarrinho();
-            showToast(`✓ ${simplesAtual.produtoNome} adicionado!`, 'success');
-            fecharModalSimples();
-        } else {
-            showToast(data.message || 'Erro ao adicionar', 'error');
-        }
-    })
-    .catch(error => {
-        console.error('Erro:', error);
-        showToast('Erro ao adicionar ao carrinho', 'error');
-    })
-    .finally(() => {
-        btn.disabled = false;
-        btn.textContent = 'Adicionar ao Carrinho';
-    });
+    try {
+        const response = await fetch('{{ route("cliente.carrinho.adicionar.publico") }}', {
+            method: 'POST', headers: {'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content, 'Accept':'application/json'}, body: formData
+        });
+        const data = await response.json();
+        if (!response.ok || !data.success) throw new Error(data.message || 'Não foi possível adicionar o item.');
+        cartCount = data.cart_count;
+        cartTotal = data.cart_total;
+        atualizarUICarrinho();
+        if (fichaItem.open && simplesAtual === item) fecharModalSimples();
+        showToast('Item adicionado à sacola.', 'success');
+    } catch (e) {
+        if (fichaItem.open && simplesAtual === item) {
+            erro.textContent = e.message || 'Confira sua conexão e tente novamente.';
+            erro.hidden = false;
+        } else showToast('Não foi possível adicionar o item.', 'error');
+    } finally {
+        item.enviando = false;
+        if (simplesAtual === item) atualizarFicha();
+    }
 }
 
 // ========== PIZZA ==========
@@ -1656,12 +1570,13 @@ function adicionarPizzaAoCarrinho() {
 
 // ========== SEARCH & NAVIGATION ==========
 document.getElementById('search-input')?.addEventListener('input', function(e) {
-    const searchTerm = e.target.value.toLowerCase();
+    const normalizar = texto => texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase();
+    const searchTerm = normalizar(e.target.value);
     const productCards = document.querySelectorAll('.product-card');
 
     productCards.forEach(card => {
         const produtoNome = card.getAttribute('data-produto');
-        if (produtoNome.includes(searchTerm)) {
+        if (normalizar(produtoNome).includes(searchTerm)) {
             card.style.display = '';
         } else {
             card.style.display = 'none';
@@ -1673,6 +1588,7 @@ document.getElementById('search-input')?.addEventListener('input', function(e) {
         const visibleCards = Array.from(cards).filter(card => card.style.display !== 'none');
         section.style.display = visibleCards.length === 0 && searchTerm !== '' ? 'none' : '';
     });
+    document.getElementById('db-no-results').hidden = !searchTerm || Array.from(productCards).some(card => card.style.display !== 'none');
 });
 
 // Scroll to category function (used by mobile buttons)
@@ -1681,7 +1597,7 @@ function scrollToCategoria(categoriaId) {
     if (targetSection) {
         // Add small vibration feedback on mobile
         if (navigator.vibrate) navigator.vibrate(10);
-        targetSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        targetSection.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
     }
 }
 
@@ -1757,9 +1673,7 @@ document.addEventListener('keydown', function(e) {
         if (!document.getElementById('modalPizza').classList.contains('hidden')) {
             fecharModalPizza();
         }
-        if (!document.getElementById('modalSimples').classList.contains('hidden')) {
-            fecharModalSimples();
-        }
+        // O diálogo nativo do produto simples trata Escape e contenção de foco.
         if (!document.getElementById('modalCarrinho').classList.contains('hidden')) {
             fecharModalCarrinho();
         }

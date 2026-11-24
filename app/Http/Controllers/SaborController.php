@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\LojaValidation;
 use App\Models\Sabor;
 use App\Models\Categoria;
 use Illuminate\Http\Request;
@@ -27,7 +28,7 @@ class SaborController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'categoria_id' => 'required|exists:categorias,id',
+            'categoria_id' => ['required', LojaValidation::exists('categorias')],
             'nome' => 'required|string|max:255',
             'descricao' => 'nullable|string',
             'ingredientes' => 'nullable|string',
@@ -35,13 +36,13 @@ class SaborController extends Controller
             'preco_m' => 'nullable|numeric|min:0',
             'preco_g' => 'nullable|numeric|min:0',
             'preco_gg' => 'nullable|numeric|min:0',
-            'imagem' => 'nullable|image|max:2048',
+            'imagem' => 'nullable|image|max:4096',
             'ativo' => 'boolean',
             'ordem' => 'nullable|integer',
         ]);
 
         if ($request->hasFile('imagem')) {
-            $validated['imagem'] = $request->file('imagem')->store('sabores', 'public');
+            $validated['imagem'] = $request->file('imagem')->store('lojas/'.app(\App\Support\LojaContext::class)->id().'/sabores', 'public');
         }
 
         $validated['ativo'] = $request->has('ativo');
@@ -69,7 +70,7 @@ class SaborController extends Controller
     public function update(Request $request, Sabor $sabor)
     {
         $validated = $request->validate([
-            'categoria_id' => 'required|exists:categorias,id',
+            'categoria_id' => ['required', LojaValidation::exists('categorias')],
             'nome' => 'required|string|max:255',
             'descricao' => 'nullable|string',
             'ingredientes' => 'nullable|string',
@@ -77,7 +78,7 @@ class SaborController extends Controller
             'preco_m' => 'nullable|numeric|min:0',
             'preco_g' => 'nullable|numeric|min:0',
             'preco_gg' => 'nullable|numeric|min:0',
-            'imagem' => 'nullable|image|max:2048',
+            'imagem' => 'nullable|image|max:4096',
             'ativo' => 'boolean',
             'ordem' => 'nullable|integer',
         ]);
@@ -87,7 +88,7 @@ class SaborController extends Controller
             if ($sabor->imagem) {
                 \Storage::disk('public')->delete($sabor->imagem);
             }
-            $validated['imagem'] = $request->file('imagem')->store('sabores', 'public');
+            $validated['imagem'] = $request->file('imagem')->store('lojas/'.app(\App\Support\LojaContext::class)->id().'/sabores', 'public');
         }
 
         $validated['ativo'] = $request->has('ativo');

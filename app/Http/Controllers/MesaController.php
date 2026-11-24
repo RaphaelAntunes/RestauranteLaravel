@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Mesa;
+use App\Support\LojaValidation;
 use Illuminate\Http\Request;
 
 class MesaController extends Controller
@@ -10,6 +11,13 @@ class MesaController extends Controller
     public function index()
     {
         $mesas = Mesa::with('pedidoOnline.cliente')
+            ->where(function ($query) {
+                $query->where('tipo', 'normal')
+                    ->orWhere(function ($online) {
+                        $online->whereIn('tipo', ['delivery', 'retirada'])
+                            ->where('ativo', true);
+                    });
+            })
             ->orderByRaw("FIELD(tipo, 'delivery', 'retirada', 'normal')")
             ->orderBy('numero')
             ->get()
@@ -39,7 +47,7 @@ class MesaController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'numero' => 'required|integer|unique:mesas',
+            'numero' => ['required', 'integer', LojaValidation::unique('mesas', 'numero')],
             'capacidade' => 'required|integer|min:1',
             'localizacao' => 'nullable|string|max:100',
             'status' => 'required|in:disponivel,ocupada,reservada,manutencao',
@@ -80,7 +88,7 @@ class MesaController extends Controller
     public function update(Request $request, Mesa $mesa)
     {
         $validated = $request->validate([
-            'numero' => 'required|integer|unique:mesas,numero,' . $mesa->id,
+            'numero' => ['required', 'integer', LojaValidation::unique('mesas', 'numero', $mesa->id)],
             'capacidade' => 'required|integer|min:1',
             'localizacao' => 'nullable|string|max:100',
             'status' => 'required|in:disponivel,ocupada,reservada,manutencao',
@@ -247,11 +255,15 @@ class MesaController extends Controller
 
         // Se não há mais pedidos ativos, liberar a mesa e preparar para nova sessão
         if ($pedidosAtivos == 0) {
-            $mesa->update([
-                'status' => 'disponivel',
-                'cliente_nome' => null,
-                'sessao_atual' => null // Limpar sessão para gerar nova no próximo pedido
-            ]);
+            if ($mesa->isOnline()) {
+                $mesa->liberarMesaVirtual();
+            } else {
+                $mesa->update([
+                    'status' => 'disponivel',
+                    'cliente_nome' => null,
+                    'sessao_atual' => null // Limpar sessão para gerar nova no próximo pedido
+                ]);
+            }
         }
 
         return response()->json([

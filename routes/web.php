@@ -16,28 +16,50 @@ use App\Http\Controllers\PreparoController;
 use App\Http\Controllers\RelatorioController;
 use App\Http\Controllers\GarcomManagementController;
 use App\Http\Controllers\GarcomController;
-use App\Http\Controllers\FaceAuthController;
 use App\Http\Controllers\Cliente\ClienteAuthController;
 use App\Http\Controllers\Cliente\CardapioController;
 use App\Http\Controllers\Cliente\CarrinhoController;
 use App\Http\Controllers\Cliente\PedidoOnlineController;
 use App\Http\Controllers\Cliente\ClienteEnderecoController;
+use App\Http\Controllers\Cliente\ClientePerfilController;
 use App\Http\Controllers\Admin\PedidoOnlineAdminController;
 use App\Http\Controllers\Admin\ConfiguracaoDeliveryController;
+use App\Http\Controllers\Admin\LojaPerfilController;
+use App\Http\Controllers\Platform\PlatformAuthController;
+use App\Http\Controllers\Platform\PlatformLojaController;
+
+Route::view('/', 'platform.landing')->name('platform.landing');
+
+Route::prefix('gestao')->name('platform.')->group(function () {
+    Route::middleware('guest')->group(function () {
+        Route::get('/login', [PlatformAuthController::class, 'showLogin'])->name('login');
+        Route::post('/login', [PlatformAuthController::class, 'login'])->middleware('throttle:5,1')->name('login.post');
+    });
+
+    Route::middleware(['auth', 'platform.admin'])->group(function () {
+        Route::post('/logout', [PlatformAuthController::class, 'logout'])->name('logout');
+        Route::get('/lojas', [PlatformLojaController::class, 'index'])->name('lojas.index');
+        Route::get('/lojas/nova', [PlatformLojaController::class, 'create'])->name('lojas.create');
+        Route::post('/lojas', [PlatformLojaController::class, 'store'])->name('lojas.store');
+        Route::patch('/lojas/{loja}/status', [PlatformLojaController::class, 'status'])->name('lojas.status');
+    });
+});
+
+Route::prefix('restaurantes/{loja:slug}')->middleware('loja')->group(function () {
 
 /*
 |--------------------------------------------------------------------------
 | Rotas de Clientes (Sistema de Pedidos Online)
 |--------------------------------------------------------------------------
 */
-Route::prefix('cliente')->name('cliente.')->group(function () {
+Route::name('cliente.')->group(function () {
 
     // Rotas para visitantes (guest)
     Route::middleware('cliente.guest')->group(function () {
-        Route::get('/login', [ClienteAuthController::class, 'showLoginForm'])->name('login');
-        Route::post('/login/otp', [ClienteAuthController::class, 'enviarOtp'])->name('otp.enviar');
-        Route::get('/login/verificar', [ClienteAuthController::class, 'showVerificarOtpForm'])->name('otp.form');
-        Route::post('/login/verificar', [ClienteAuthController::class, 'verificarOtp'])->name('otp.verificar');
+        Route::get('/entrar', [ClienteAuthController::class, 'showLoginForm'])->name('login');
+        Route::post('/entrar/otp', [ClienteAuthController::class, 'enviarOtp'])->middleware('throttle:3,10')->name('otp.enviar');
+        Route::get('/entrar/verificar', [ClienteAuthController::class, 'showVerificarOtpForm'])->name('otp.form');
+        Route::post('/entrar/verificar', [ClienteAuthController::class, 'verificarOtp'])->middleware('throttle:6,1')->name('otp.verificar');
     });
 
     // Cardápio público (sem auth)
@@ -48,17 +70,21 @@ Route::prefix('cliente')->name('cliente.')->group(function () {
     Route::post('/carrinho/adicionar', [CarrinhoController::class, 'adicionar'])->name('carrinho.adicionar.publico');
     Route::get('/carrinho/info', [CarrinhoController::class, 'getCartInfo'])->name('carrinho.info');
     Route::get('/carrinho/data', [CarrinhoController::class, 'getCartData'])->name('carrinho.data');
+    Route::put('/carrinho/{item}', [CarrinhoController::class, 'atualizar'])->name('carrinho.atualizar');
+    Route::delete('/carrinho/{item}', [CarrinhoController::class, 'remover'])->name('carrinho.remover');
+    Route::delete('/carrinho', [CarrinhoController::class, 'limpar'])->name('carrinho.limpar');
 
     // Rotas autenticadas
-    Route::middleware('cliente.auth')->group(function () {
+    Route::middleware(['cliente.auth', 'loja.cliente'])->group(function () {
         Route::post('/logout', [ClienteAuthController::class, 'logout'])->name('logout');
+
+        // Perfil e dados salvos do cliente
+        Route::get('/perfil', [ClientePerfilController::class, 'edit'])->name('perfil.edit');
+        Route::put('/perfil', [ClientePerfilController::class, 'update'])->name('perfil.update');
 
         // Carrinho
         Route::prefix('carrinho')->name('carrinho.')->group(function () {
             Route::get('/', [CarrinhoController::class, 'index'])->name('index');
-            Route::put('/{item}', [CarrinhoController::class, 'atualizar'])->name('atualizar');
-            Route::delete('/{item}', [CarrinhoController::class, 'remover'])->name('remover');
-            Route::delete('/', [CarrinhoController::class, 'limpar'])->name('limpar');
         });
 
         // Pedidos
@@ -75,6 +101,8 @@ Route::prefix('cliente')->name('cliente.')->group(function () {
     });
 });
 
+Route::prefix('painel')->group(function () {
+
 /*
 |--------------------------------------------------------------------------
 | Rotas de Autenticação (Públicas - Funcionários)
@@ -83,11 +111,8 @@ Route::prefix('cliente')->name('cliente.')->group(function () {
 Route::middleware('guest')->group(function () {
     Route::get('/', [AuthController::class, 'showLogin'])->name('login');
     Route::get('/login', [AuthController::class, 'showLogin']);
-    Route::post('/login', [AuthController::class, 'login'])->name('login.post');
+    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1')->name('login.post');
 
-    // Login Facial (público)
-    Route::get('/face/login', [FaceAuthController::class, 'showLoginPage'])->name('face.login');
-    Route::post('/face/login', [FaceAuthController::class, 'login'])->name('face.login.post');
 });
 
 /*
@@ -95,15 +120,10 @@ Route::middleware('guest')->group(function () {
 | Rotas Autenticadas
 |--------------------------------------------------------------------------
 */
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'loja.user', 'active'])->group(function () {
 
     // Logout
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
-
-    // Cadastro Facial (protegido - usuário logado)
-    Route::get('/face/register', [FaceAuthController::class, 'showRegisterPage'])->name('face.register');
-    Route::post('/face/register', [FaceAuthController::class, 'register'])->name('face.register.post');
-    Route::delete('/face/remove', [FaceAuthController::class, 'remove'])->name('face.remove');
 
     // Dashboard (Apenas Admin, Caixa e Cozinha)
     Route::get('/home', [HomeController::class, 'index'])->name('home')->middleware('role:admin,caixa,cozinha');
@@ -250,4 +270,13 @@ Route::middleware('auth')->group(function () {
         Route::get('/', [ConfiguracaoDeliveryController::class, 'edit'])->name('edit');
         Route::put('/', [ConfiguracaoDeliveryController::class, 'update'])->name('update');
     });
+
+    Route::prefix('admin/minha-loja')->name('admin.loja.')->middleware('role:admin')->group(function () {
+        Route::get('/', [LojaPerfilController::class, 'edit'])->name('edit');
+        Route::put('/', [LojaPerfilController::class, 'update'])->name('update');
+        Route::post('/banners', [LojaPerfilController::class, 'storeBanner'])->name('banners.store');
+        Route::delete('/banners/{banner}', [LojaPerfilController::class, 'destroyBanner'])->name('banners.destroy');
+    });
+});
+});
 });

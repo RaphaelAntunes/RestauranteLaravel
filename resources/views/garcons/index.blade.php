@@ -25,8 +25,6 @@
                     <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Fechar Mesas</th>
                     <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Cancelar Itens</th>
                     <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Cancelar Pedidos</th>
-                    <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Facial Cadastrado</th>
-                    <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Facial Obrigatório</th>
                     <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Ações</th>
                 </tr>
             </thead>
@@ -83,33 +81,13 @@
                         </label>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-center">
-                        @if($garcom->face_embedding)
-                            <span class="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                                ✓ Cadastrado
-                            </span>
-                        @else
-                            <span class="px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200">
-                                ✗ Não cadastrado
-                            </span>
-                        @endif
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-center">
-                        <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" class="sr-only peer permission-toggle"
-                                   data-garcom-id="{{ $garcom->id }}"
-                                   data-permission="facial_obrigatorio"
-                                   {{ $garcom->facial_obrigatorio ? 'checked' : '' }}>
-                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 dark:peer-focus:ring-purple-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-gradient-to-r peer-checked:from-purple-500 peer-checked:to-indigo-500"></div>
-                        </label>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-center">
                         <div class="flex items-center justify-center space-x-2">
-                            <a href="{{ route('garcons.edit', $garcom) }}" class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 transition-colors" title="Editar">
+                            <a href="{{ route('garcons.edit', ['garcon' => $garcom]) }}" class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 transition-colors" title="Editar">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                                 </svg>
                             </a>
-                            <form action="{{ route('garcons.destroy', $garcom) }}" method="POST" class="inline" onsubmit="return confirm('Tem certeza que deseja remover este garçom?')">
+                            <form action="{{ route('garcons.destroy', ['garcon' => $garcom]) }}" method="POST" class="inline" onsubmit="return confirm('Tem certeza que deseja remover este garçom?')">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 transition-colors" title="Excluir">
@@ -123,7 +101,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="10" class="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
+                    <td colspan="8" class="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
                         Nenhum garçom cadastrado ainda.
                     </td>
                 </tr>
@@ -135,6 +113,9 @@
 
 @push('scripts')
 <script>
+    const garcomPermissionsRoute = @json(route('garcons.permissions.update', ['garcon' => '__GARCOM__']));
+    const garcomToggleStatusRoute = @json(route('garcons.toggle-status', ['garcon' => '__GARCOM__']));
+
     document.addEventListener('DOMContentLoaded', function() {
         const toggles = document.querySelectorAll('.permission-toggle');
 
@@ -154,11 +135,10 @@
             pode_lancar_pedidos: document.querySelector(`input[data-garcom-id="${garcomId}"][data-permission="pode_lancar_pedidos"]`).checked,
             pode_fechar_mesas: document.querySelector(`input[data-garcom-id="${garcomId}"][data-permission="pode_fechar_mesas"]`).checked,
             pode_cancelar_itens: document.querySelector(`input[data-garcom-id="${garcomId}"][data-permission="pode_cancelar_itens"]`).checked,
-            pode_cancelar_pedidos: document.querySelector(`input[data-garcom-id="${garcomId}"][data-permission="pode_cancelar_pedidos"]`).checked,
-            facial_obrigatorio: document.querySelector(`input[data-garcom-id="${garcomId}"][data-permission="facial_obrigatorio"]`).checked
+            pode_cancelar_pedidos: document.querySelector(`input[data-garcom-id="${garcomId}"][data-permission="pode_cancelar_pedidos"]`).checked
         };
 
-        fetch(`/garcons/${garcomId}/permissions`, {
+        fetch(garcomPermissionsRoute.replace('__GARCOM__', encodeURIComponent(garcomId)), {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -181,7 +161,7 @@
     }
 
     function toggleStatus(garcomId) {
-        fetch(`/garcons/${garcomId}/toggle-status`, {
+        fetch(garcomToggleStatusRoute.replace('__GARCOM__', encodeURIComponent(garcomId)), {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

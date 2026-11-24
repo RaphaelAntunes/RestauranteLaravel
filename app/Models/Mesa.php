@@ -2,15 +2,17 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToLoja;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Mesa extends Model
 {
-    use HasFactory;
+    use HasFactory, BelongsToLoja;
 
     protected $fillable = [
+        'loja_id',
         'numero',
         'tipo',
         'pedido_online_id',
@@ -140,7 +142,12 @@ class Mesa extends Model
     public function liberarMesaVirtual(): void
     {
         if ($this->isOnline()) {
-            $this->delete();
+            $this->update([
+                'status' => 'disponivel',
+                'cliente_nome' => null,
+                'sessao_atual' => null,
+                'ativo' => false,
+            ]);
         }
     }
 }

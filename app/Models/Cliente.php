@@ -2,14 +2,16 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToLoja;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
 class Cliente extends Authenticatable
 {
-    use HasFactory;
+    use HasFactory, BelongsToLoja;
 
     protected $fillable = [
+        'loja_id',
         'nome',
         'celular',
         'email',

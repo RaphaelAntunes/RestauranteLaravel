@@ -34,7 +34,7 @@ class PDVController extends Controller
     {
         // Verificar se é garçom e se tem permissão
         $source = $request->get('source');
-        if ($source === 'garcom' && !auth()->user()->podeFecharMesas()) {
+        if ($request->routeIs('garcom.fechar') && !auth()->user()->podeFecharMesas()) {
             return redirect()->route('garcom.index')
                 ->with('error', 'Você não tem permissão para fechar mesas.');
         }
@@ -70,9 +70,8 @@ class PDVController extends Controller
     {
         // Verificar se é garçom e se tem permissão
         $source = $request->get('source');
-        if ($source === 'garcom' && !auth()->user()->podeFecharMesas()) {
-            return redirect()->route('garcom.index')
-                ->with('error', 'Você não tem permissão para processar pagamentos.');
+        if ($request->routeIs('garcom.pagamento') && !auth()->user()->podeFecharMesas()) {
+            abort(403, 'Você não tem permissão para processar pagamentos.');
         }
 
         $validated = $request->validate([
@@ -109,6 +108,7 @@ class PDVController extends Controller
                 ->get();
 
             if ($pedidos->isEmpty()) {
+                DB::rollBack();
                 return back()->with('error', 'Esta mesa não possui pedidos em aberto.');
             }
 
@@ -150,6 +150,7 @@ class PDVController extends Controller
 
             // Validar se o valor pago é suficiente (tolerância de 1 centavo)
             if ($valor_pago < $total - 0.01) {
+                DB::rollBack();
                 return back()
                     ->withInput()
                     ->with('error', 'O valor pago (R$ ' . number_format($valor_pago, 2, ',', '.') . ') é menor que o total da conta (R$ ' . number_format($total, 2, ',', '.') . ')');
@@ -174,7 +175,7 @@ class PDVController extends Controller
                 'valor_pago' => $valor_pago,
                 'troco' => round(max(0, $valor_pago - $total), 2),
                 'status' => 'aprovado',
-                'observacoes' => $validated['observacoes'],
+                'observacoes' => $validated['observacoes'] ?? null,
             ]);
 
             // Criar detalhes do pagamento (vincular pedidos)
@@ -182,6 +183,7 @@ class PDVController extends Controller
                 PagamentoDetalhe::create([
                     'pagamento_id' => $pagamento->id,
                     'pedido_id' => $pedido->id,
+                    'metodo' => $validated['forma_pagamento'],
                     'valor' => $pedido->total,
                 ]);
 
@@ -192,9 +194,15 @@ class PDVController extends Controller
                 ]);
             }
 
-            // Se for mesa virtual (online), deletar. Caso contrário, liberar.
+            // Mesas virtuais também fazem parte do histórico do pedido e do
+            // pagamento. Arquivá-las evita quebrar essas referências.
             if ($mesa->isOnline()) {
-                $mesa->delete();
+                $mesa->update([
+                    'status' => 'disponivel',
+                    'cliente_nome' => null,
+                    'sessao_atual' => null,
+                    'ativo' => false,
+                ]);
             } else {
                 $mesa->update([
                     'status' => 'disponivel',
@@ -211,11 +219,12 @@ class PDVController extends Controller
                     ->with('success', 'Conta fechada com sucesso!');
             }
 
-            return redirect()->route('pdv.comprovante', $pagamento)
+            return redirect()->route('pdv.comprovante', ['pagamento' => $pagamento])
                 ->with('success', 'Pagamento realizado com sucesso!');
 
         } catch (\Exception $e) {
             DB::rollBack();
+            report($e);
             return back()->with('error', 'Erro ao processar pagamento: ' . $e->getMessage());
         }
     }

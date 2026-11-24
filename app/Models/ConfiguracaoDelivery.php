@@ -2,16 +2,18 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToLoja;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class ConfiguracaoDelivery extends Model
 {
-    use HasFactory;
+    use HasFactory, BelongsToLoja;
 
     protected $table = 'configuracoes_delivery';
 
     protected $fillable = [
+        'loja_id',
         'tipo_taxa',
         'valor_taxa_fixa',
         'valor_minimo_gratis',
@@ -41,6 +43,8 @@ class ConfiguracaoDelivery extends Model
             'tipo_taxa' => 'fixa',
             'valor_taxa_fixa' => 5.00,
             'tempo_medio_preparo' => 40,
+            'pedido_minimo' => 0,
+            'ativo' => true,
         ]);
     }
 

@@ -154,6 +154,27 @@
 // Variável global para armazenar o ID do pedido atual
 let pedidoAtualId = null;
 
+const dashboardRoutes = {
+    pedidoApi: @json(route('api.pedido', ['loja' => $lojaAtual->slug, 'id' => '__ID__'])),
+    pedidoDetalhes: @json(route('pedidos.show', ['loja' => $lojaAtual->slug, 'pedido' => '__ID__'])),
+    pedidoInvalidar: @json(route('pedidos.invalidar', ['loja' => $lojaAtual->slug, 'pedido' => '__ID__'])),
+    pedidoAlterarData: @json(route('pedidos.alterarData', ['loja' => $lojaAtual->slug, 'pedido' => '__ID__'])),
+    mesaApi: @json(route('api.mesa', ['loja' => $lojaAtual->slug, 'id' => '__ID__'])),
+    mesaComanda: @json(route('mesas.comanda', ['loja' => $lojaAtual->slug, 'mesa' => '__ID__'])),
+};
+
+function dashboardRoute(template, id) {
+    return template.replace('__ID__', encodeURIComponent(id));
+}
+
+function validarResposta(response) {
+    if (!response.ok) {
+        throw new Error(`Falha ao carregar (${response.status})`);
+    }
+
+    return response.json();
+}
+
 function abrirModalPedido(id) {
     pedidoAtualId = id; // Armazenar o ID do pedido
     document.getElementById('modalPedido').classList.remove('hidden');
@@ -166,8 +187,8 @@ function abrirModalPedido(id) {
     // Mostrar loading
     showLoading('Carregando detalhes do pedido...');
 
-    fetch(`/api/pedido/${id}`)
-        .then(response => response.json())
+    fetch(dashboardRoute(dashboardRoutes.pedidoApi, id))
+        .then(validarResposta)
         .then(data => {
             const p = data.pedido;
 
@@ -176,7 +197,7 @@ function abrirModalPedido(id) {
             document.getElementById('modalPedidoGarcom').textContent = p.garcom;
             document.getElementById('modalPedidoData').textContent = p.data;
             document.getElementById('modalPedidoTotal').textContent = p.total_formatado;
-            document.getElementById('modalPedidoVerMais').href = `/pedidos/${p.id}`;
+            document.getElementById('modalPedidoVerMais').href = dashboardRoute(dashboardRoutes.pedidoDetalhes, p.id);
 
             // Status
             let statusClass = 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-300 border-gray-200 dark:border-gray-700';
@@ -216,7 +237,11 @@ function abrirModalPedido(id) {
             });
             document.getElementById('modalPedidoItens').innerHTML = itensHtml;
         })
-        .catch(error => console.error('Erro:', error))
+        .catch(error => {
+            console.error('Erro:', error);
+            document.getElementById('modalPedidoNumero').textContent = 'Não foi possível carregar';
+            document.getElementById('modalPedidoItens').innerHTML = '<p class="text-red-400">Tente novamente em instantes.</p>';
+        })
         .finally(() => {
             // Esconder loading
             hideLoading();
@@ -230,15 +255,15 @@ function abrirModalMesa(id) {
     // Mostrar loading
     showLoading('Carregando detalhes da mesa...');
 
-    fetch(`/api/mesa/${id}`)
-        .then(response => response.json())
+    fetch(dashboardRoute(dashboardRoutes.mesaApi, id))
+        .then(validarResposta)
         .then(data => {
             const m = data.mesa;
 
             document.getElementById('modalMesaNumero').textContent = `Mesa ${m.numero}`;
             document.getElementById('modalMesaInfo').textContent = `${m.localizacao} - Capacidade: ${m.capacidade} pessoas`;
             document.getElementById('modalMesaTotal').textContent = m.total_geral;
-            document.getElementById('modalMesaComanda').href = `/mesas/${m.id}/comanda`;
+            document.getElementById('modalMesaComanda').href = dashboardRoute(dashboardRoutes.mesaComanda, m.id);
 
             // Pedidos
             let pedidosHtml = '';
@@ -318,7 +343,7 @@ function confirmarInvalidar() {
 
     showLoading('Invalidando pedido...');
 
-    fetch(`/pedidos/${pedidoAtualId}/invalidar`, {
+    fetch(dashboardRoute(dashboardRoutes.pedidoInvalidar, pedidoAtualId), {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -373,7 +398,7 @@ function confirmarAlterarData() {
 
     showLoading('Alterando data do pedido...');
 
-    fetch(`/pedidos/${pedidoAtualId}/alterar-data`, {
+    fetch(dashboardRoute(dashboardRoutes.pedidoAlterarData, pedidoAtualId), {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',

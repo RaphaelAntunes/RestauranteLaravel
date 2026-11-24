@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Support\LojaValidation;
 use App\Http\Controllers\Controller;
 use App\Models\Pedido;
 use App\Models\PedidoItem;
@@ -73,6 +74,10 @@ class PedidoOnlineAdminController extends Controller
             $pedido->update(['data_finalizacao' => now()]);
         }
 
+        if ($request->status === 'cancelado' && $pedido->mesa?->isOnline()) {
+            $pedido->mesa->liberarMesaVirtual();
+        }
+
         return back()->with('success', 'Status atualizado com sucesso!');
     }
 
@@ -96,11 +101,11 @@ class PedidoOnlineAdminController extends Controller
     public function adicionarItem(Request $request, Pedido $pedido)
     {
         $request->validate([
-            'produto_id' => 'required|exists:produtos,id',
-            'produto_tamanho_id' => 'nullable|exists:produto_tamanhos,id',
+            'produto_id' => ['required', LojaValidation::exists('produtos')],
+            'produto_tamanho_id' => ['nullable', LojaValidation::exists('produto_tamanhos')],
             'quantidade' => 'required|integer|min:1',
             'sabores' => 'nullable|array',
-            'sabores.*' => 'exists:sabores,id',
+            'sabores.*' => LojaValidation::exists('sabores'),
             'observacoes' => 'nullable|string|max:255',
         ]);
 

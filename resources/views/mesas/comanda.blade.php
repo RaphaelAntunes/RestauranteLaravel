@@ -82,14 +82,14 @@
             <span>Adicionar Itens</span>
         </button>
 
-        <a href="{{ route('pdv.fechar', $mesa) }}" class="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white px-6 py-4 rounded-xl font-bold text-lg shadow-xl transition flex items-center justify-center space-x-2">
+        <a href="{{ route('pdv.fechar', ['mesa' => $mesa]) }}" class="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white px-6 py-4 rounded-xl font-bold text-lg shadow-xl transition flex items-center justify-center space-x-2">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
             </svg>
             <span>Fechar Conta</span>
         </a>
 
-        <a href="{{ route('mesas.imprimir', $mesa) }}" target="_blank" class="bg-gray-700 hover:bg-gray-600 text-white px-6 py-4 rounded-xl font-bold text-lg shadow-xl transition flex items-center justify-center space-x-2">
+        <a href="{{ route('mesas.imprimir', ['mesa' => $mesa]) }}" target="_blank" class="bg-gray-700 hover:bg-gray-600 text-white px-6 py-4 rounded-xl font-bold text-lg shadow-xl transition flex items-center justify-center space-x-2">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
             </svg>
@@ -844,7 +844,7 @@ function atualizarClienteNome() {
     // Mostrar loading
     showLoading('Salvando nome do cliente...');
 
-    fetch('{{ route('mesas.atualizarCliente', $mesa) }}', {
+    fetch('{{ route('mesas.atualizarCliente', ['mesa' => $mesa]) }}', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -870,6 +870,23 @@ function atualizarClienteNome() {
         // Esconder loading
         hideLoading();
     });
+}
+
+const rotaCancelarPedido = @json(route('garcom.cancelarPedido', ['loja' => $lojaAtual->slug, 'pedido' => '__PEDIDO__']));
+const rotaAtualizarItem = @json(route('garcom.atualizarQuantidadeItem', ['loja' => $lojaAtual->slug, 'item' => '__ITEM__']));
+const rotaCancelarItem = @json(route('garcom.cancelarItem', ['loja' => $lojaAtual->slug, 'item' => '__ITEM__']));
+
+async function lerRespostaJson(response) {
+    const contentType = response.headers.get('content-type') || '';
+    if (!contentType.includes('application/json')) {
+        throw new Error(response.status === 419
+            ? 'Sua sessão expirou. Atualize a página e tente novamente.'
+            : 'O servidor não conseguiu concluir a solicitação. Atualize a página e tente novamente.');
+    }
+
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message || 'Não foi possível concluir a solicitação.');
+    return data;
 }
 
 // Cancelar pedido - usar event delegation
@@ -912,17 +929,15 @@ document.addEventListener('click', function(e) {
         // Mostrar loading overlay
         showLoading('Cancelando pedido...');
 
-        fetch(`/garcom/pedido/${pedidoId}/cancelar`, {
+        fetch(rotaCancelarPedido.replace('__PEDIDO__', encodeURIComponent(pedidoId)), {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'Accept': 'application/json',
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
             }
         })
-        .then(response => {
-            console.log('Response status:', response.status);
-            return response.json();
-        })
+        .then(lerRespostaJson)
         .then(data => {
             console.log('Response data:', data);
             if (data.success) {
@@ -977,17 +992,18 @@ function alterarQuantidadeItem(itemId, delta, precoUnitario) {
     // Mostrar loading
     showLoading('Atualizando quantidade...');
 
-    fetch(`/garcom/item/${itemId}/atualizar-quantidade`, {
+    fetch(rotaAtualizarItem.replace('__ITEM__', encodeURIComponent(itemId)), {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
+            'Accept': 'application/json',
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
         },
         body: JSON.stringify({
             quantidade: novaQuantidade
         })
     })
-    .then(response => response.json()) // Parse JSON independente do status
+    .then(lerRespostaJson)
     .then(data => {
         if (data.success) {
             // Atualizar quantidade
@@ -1041,14 +1057,15 @@ function cancelarItem(itemId, nomeProduto) {
     // Mostrar loading
     showLoading('Cancelando item...');
 
-    fetch(`/garcom/item/${itemId}/cancelar`, {
+    fetch(rotaCancelarItem.replace('__ITEM__', encodeURIComponent(itemId)), {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
+            'Accept': 'application/json',
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
         }
     })
-    .then(response => response.json())
+    .then(lerRespostaJson)
     .then(data => {
         if (data.success) {
             mostrarNotificacao(data.message || '✓ Item cancelado!', 'success');

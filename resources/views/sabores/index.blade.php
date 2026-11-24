@@ -109,12 +109,12 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                             <div class="flex items-center justify-end gap-2">
-                                <a href="{{ route('sabores.edit', $sabor) }}" class="text-blue-400 hover:text-blue-300 transition">
+                                <a href="{{ route('sabores.edit', ['sabor' => $sabor]) }}" class="text-blue-400 hover:text-blue-300 transition">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                                     </svg>
                                 </a>
-                                <form action="{{ route('sabores.destroy', $sabor) }}" method="POST" class="inline" onsubmit="return confirm('Tem certeza que deseja excluir este sabor?')">
+                                <form action="{{ route('sabores.destroy', ['sabor' => $sabor]) }}" method="POST" class="inline" onsubmit="return confirm('Tem certeza que deseja excluir este sabor?')">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="text-red-400 hover:text-red-300 transition">

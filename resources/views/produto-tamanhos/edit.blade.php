@@ -18,7 +18,7 @@
     </div>
 
     <!-- Form -->
-    <form action="{{ route('produto-tamanhos.update', $produtoTamanho) }}" method="POST" class="dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 space-y-6">
+    <form action="{{ route('produto-tamanhos.update', ['produto_tamanho' => $produtoTamanho]) }}" method="POST" class="dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 space-y-6">
         @csrf
         @method('PUT')
 

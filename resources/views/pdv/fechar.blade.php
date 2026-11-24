@@ -98,7 +98,7 @@
         <div class="bg-gray-800 rounded-xl shadow-xl p-6 border border-gray-700">
             <h2 class="text-xl font-bold mb-4 text-white">Dados do Pagamento</h2>
 
-            <form action="{{ isset($source) && $source === 'garcom' ? route('garcom.pagamento', $mesa) : route('pdv.pagamento', $mesa) }}" method="POST" id="formPagamento">
+            <form action="{{ isset($source) && $source === 'garcom' ? route('garcom.pagamento', ['mesa' => $mesa]) : route('pdv.pagamento', ['mesa' => $mesa]) }}" method="POST" id="formPagamento">
                 @csrf
                 @if(isset($source) && $source === 'garcom')
                 <input type="hidden" name="source" value="garcom">
@@ -454,6 +454,8 @@
 
 @push('scripts')
 <script>
+const rotaAtualizarItem = @json(route('garcom.atualizarQuantidadeItem', ['item' => '__ITEM__']));
+const rotaCancelarItem = @json(route('garcom.cancelarItem', ['item' => '__ITEM__']));
 let subtotal = {{ $total }};
 let totalFinal = subtotal;
 let formasPagamento = []; // Array para armazenar as formas de pagamento adicionadas
@@ -1038,7 +1040,7 @@ function alterarQuantidade(itemId, delta, precoUnitario) {
     // Mostrar loading
     showLoading('Atualizando quantidade...');
 
-    fetch(`/garcom/item/${itemId}/atualizar-quantidade`, {
+    fetch(rotaAtualizarItem.replace('__ITEM__', encodeURIComponent(itemId)), {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -1113,7 +1115,7 @@ function cancelarItem(itemId, nomeProduto) {
     // Mostrar loading
     showLoading('Cancelando item...');
 
-    fetch(`/garcom/item/${itemId}/cancelar`, {
+    fetch(rotaCancelarItem.replace('__ITEM__', encodeURIComponent(itemId)), {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',

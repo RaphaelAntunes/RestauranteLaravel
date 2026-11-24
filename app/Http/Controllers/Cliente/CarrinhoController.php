@@ -7,11 +7,11 @@ use App\Models\CarrinhoItem;
 use App\Models\CarrinhoItemSabor;
 use App\Models\ConfiguracaoDelivery;
 use App\Models\Produto;
-use App\Models\ProdutoTamanho;
 use App\Models\Sabor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use App\Support\LojaValidation;
 
 class CarrinhoController extends Controller
 {
@@ -30,45 +30,68 @@ class CarrinhoController extends Controller
     public function adicionar(Request $request)
     {
         $request->validate([
-            'produto_id' => 'required|exists:produtos,id',
-            'produto_tamanho_id' => 'nullable|exists:produto_tamanhos,id',
+            'produto_id' => ['required', LojaValidation::exists('produtos')],
+            'produto_tamanho_id' => ['nullable', LojaValidation::exists('produto_tamanhos')],
             'quantidade' => 'required|integer|min:1|max:10',
             'sabores' => 'nullable|array|max:4',
-            'sabores.*' => 'exists:sabores,id',
+            'sabores.*' => LojaValidation::exists('sabores'),
             'observacoes' => 'nullable|string|max:255',
         ]);
 
         $produto = Produto::findOrFail($request->produto_id);
 
-        if (!$produto->ativo) {
+        if (!$produto->ativo || !$produto->categoria?->ativo) {
             return back()->with('error', 'Este produto não está disponível no momento.');
         }
 
-        // Calcular preço unitário (seguindo lógica de PedidoController)
+        $tamanho = null;
+        if ($request->filled('produto_tamanho_id')) {
+            $tamanho = $produto->tamanhos()
+                ->where('ativo', true)
+                ->whereKey($request->produto_tamanho_id)
+                ->first();
+
+            if (!$tamanho) {
+                return back()->with('error', 'O tamanho selecionado não pertence a este produto ou não está disponível.');
+            }
+        } elseif ($produto->temTamanhos()) {
+            return back()->with('error', 'Selecione um tamanho para este produto.');
+        }
+
+        $sabores = collect();
+        if ($request->filled('sabores')) {
+            if (!$tamanho || count($request->sabores) > $tamanho->max_sabores) {
+                return back()->with('error', 'A quantidade de sabores não é válida para o tamanho selecionado.');
+            }
+
+            $sabores = Sabor::whereIn('id', $request->sabores)
+                ->where('categoria_id', $produto->categoria_id)
+                ->where('ativo', true)
+                ->get();
+
+            if ($sabores->count() !== count(array_unique($request->sabores))) {
+                return back()->with('error', 'Um ou mais sabores não estão disponíveis para este produto.');
+            }
+        }
+
         $precoUnitario = $produto->preco;
 
-        if ($request->produto_tamanho_id) {
-            $tamanho = ProdutoTamanho::findOrFail($request->produto_tamanho_id);
+        if ($tamanho) {
             $precoUnitario = $tamanho->preco;
 
-            if ($request->sabores && count($request->sabores) > 0) {
-                // Começar com o preço do tamanho como base
+            if ($sabores->isNotEmpty()) {
                 $precoMaiorSabor = $tamanho->preco;
 
-                foreach ($request->sabores as $saborId) {
-                    $sabor = Sabor::find($saborId);
-                    if ($sabor) {
-                        $precoSabor = match($tamanho->nome) {
-                            'P' => $sabor->preco_p,
-                            'M' => $sabor->preco_m,
-                            'G' => $sabor->preco_g,
-                            'GG' => $sabor->preco_gg,
-                            default => null,
-                        };
-                        // Só considerar se o sabor tiver preço definido
-                        if ($precoSabor !== null && $precoSabor > 0) {
-                            $precoMaiorSabor = max($precoMaiorSabor, $precoSabor);
-                        }
+                foreach ($sabores as $sabor) {
+                    $precoSabor = match($tamanho->nome) {
+                        'P' => $sabor->preco_p,
+                        'M' => $sabor->preco_m,
+                        'G' => $sabor->preco_g,
+                        'GG' => $sabor->preco_gg,
+                        default => null,
+                    };
+                    if ($precoSabor !== null && $precoSabor > 0) {
+                        $precoMaiorSabor = max($precoMaiorSabor, $precoSabor);
                     }
                 }
 
@@ -182,6 +205,8 @@ class CarrinhoController extends Controller
 
     public function atualizar(CarrinhoItem $item, Request $request)
     {
+        $this->authorizeCartItem($item);
+
         $request->validate([
             'quantidade' => 'required|integer|min:1|max:10',
         ]);
@@ -199,6 +224,7 @@ class CarrinhoController extends Controller
 
     public function remover(CarrinhoItem $item, Request $request)
     {
+        $this->authorizeCartItem($item);
         $item->delete();
 
         if ($request->ajax() || $request->wantsJson()) {
@@ -241,5 +267,19 @@ class CarrinhoController extends Controller
         }
 
         return $query->where('session_id', $this->getSessionId());
+    }
+
+    private function authorizeCartItem(CarrinhoItem $item): void
+    {
+        if (Auth::guard('cliente')->check()) {
+            abort_unless((int) $item->cliente_id === (int) Auth::guard('cliente')->id(), 404);
+            return;
+        }
+
+        abort_unless(
+            $item->cliente_id === null
+                && hash_equals((string) $item->session_id, $this->getSessionId()),
+            404
+        );
     }
 }

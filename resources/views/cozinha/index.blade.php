@@ -25,7 +25,7 @@
 @endpush
 
 @section('content')
-<div class="space-y-6">
+<div class="db-kds space-y-6">
     <div class="flex justify-between items-center">
         <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Painel da Cozinha (KDS)</h1>
         <div class="flex items-center space-x-2">
@@ -104,6 +104,28 @@
 // Atualização automática a cada 5 segundos
 let atualizando = false;
 
+const cozinhaRoutes = {
+    atualizar: @json(route('cozinha.atualizar', ['loja' => $lojaAtual->slug])),
+    iniciar: @json(route('cozinha.iniciar', ['loja' => $lojaAtual->slug, 'pedido' => '__ID__'])),
+    pronto: @json(route('cozinha.pronto', ['loja' => $lojaAtual->slug, 'pedido' => '__ID__'])),
+    entregar: @json(route('cozinha.entregar', ['loja' => $lojaAtual->slug, 'pedido' => '__ID__'])),
+    entregue: @json(route('cozinha.entregue', ['loja' => $lojaAtual->slug, 'pedido' => '__ID__'])),
+};
+
+function cozinhaRoute(template, pedidoId) {
+    return template.replace('__ID__', encodeURIComponent(pedidoId));
+}
+
+function cozinhaJson(response) {
+    return response.json().then(data => {
+        if (!response.ok || data.success === false) {
+            throw new Error(data.message || `Falha na operação (${response.status})`);
+        }
+
+        return data;
+    });
+}
+
 function atualizarPedidos() {
     if (atualizando) return;
 
@@ -111,7 +133,7 @@ function atualizarPedidos() {
     document.getElementById('status-conexao').classList.remove('bg-green-500');
     document.getElementById('status-conexao').classList.add('bg-yellow-500');
 
-    fetch('{{ route("cozinha.atualizar") }}')
+    fetch(cozinhaRoutes.atualizar)
         .then(response => response.json())
         .then(data => {
             // Atualizar contadores
@@ -164,20 +186,23 @@ function iniciarPreparo(pedidoId) {
     // Mostrar loading
     showLoading('Iniciando preparo...');
 
-    fetch(`/cozinha/pedido/${pedidoId}/iniciar`, {
+    fetch(cozinhaRoute(cozinhaRoutes.iniciar, pedidoId), {
         method: 'POST',
         headers: {
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
             'Content-Type': 'application/json'
         }
     })
-    .then(response => response.json())
+    .then(cozinhaJson)
     .then(data => {
         if (data.success) {
             atualizarPedidos();
         }
     })
-    .catch(error => console.error('Erro:', error))
+    .catch(error => {
+        console.error('Erro:', error);
+        alert(error.message || 'Não foi possível iniciar o preparo.');
+    })
     .finally(() => {
         // Esconder loading
         hideLoading();
@@ -188,20 +213,23 @@ function marcarPronto(pedidoId) {
     // Mostrar loading
     showLoading('Marcando pedido como pronto...');
 
-    fetch(`/cozinha/pedido/${pedidoId}/pronto`, {
+    fetch(cozinhaRoute(cozinhaRoutes.pronto, pedidoId), {
         method: 'POST',
         headers: {
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
             'Content-Type': 'application/json'
         }
     })
-    .then(response => response.json())
+    .then(cozinhaJson)
     .then(data => {
         if (data.success) {
             atualizarPedidos();
         }
     })
-    .catch(error => console.error('Erro:', error))
+    .catch(error => {
+        console.error('Erro:', error);
+        alert(error.message || 'Não foi possível marcar o pedido como pronto.');
+    })
     .finally(() => {
         // Esconder loading
         hideLoading();
@@ -212,20 +240,23 @@ function entregar(pedidoId) {
     // Mostrar loading
     showLoading('Enviando para entrega...');
 
-    fetch(`/cozinha/pedido/${pedidoId}/entregar`, {
+    fetch(cozinhaRoute(cozinhaRoutes.entregar, pedidoId), {
         method: 'POST',
         headers: {
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
             'Content-Type': 'application/json'
         }
     })
-    .then(response => response.json())
+    .then(cozinhaJson)
     .then(data => {
         if (data.success) {
             atualizarPedidos();
         }
     })
-    .catch(error => console.error('Erro:', error))
+    .catch(error => {
+        console.error('Erro:', error);
+        alert(error.message || 'Não foi possível enviar o pedido para entrega.');
+    })
     .finally(() => {
         // Esconder loading
         hideLoading();
@@ -236,20 +267,23 @@ function marcarEntregue(pedidoId) {
     // Mostrar loading
     showLoading('Finalizando entrega...');
 
-    fetch(`/cozinha/pedido/${pedidoId}/entregue`, {
+    fetch(cozinhaRoute(cozinhaRoutes.entregue, pedidoId), {
         method: 'POST',
         headers: {
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
             'Content-Type': 'application/json'
         }
     })
-    .then(response => response.json())
+    .then(cozinhaJson)
     .then(data => {
         if (data.success) {
             atualizarPedidos();
         }
     })
-    .catch(error => console.error('Erro:', error))
+    .catch(error => {
+        console.error('Erro:', error);
+        alert(error.message || 'Não foi possível finalizar a entrega.');
+    })
     .finally(() => {
         // Esconder loading
         hideLoading();

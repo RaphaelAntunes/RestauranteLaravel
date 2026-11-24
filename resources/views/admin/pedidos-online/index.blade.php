@@ -229,7 +229,7 @@
                         R$ {{ number_format($pedido->getTotalComTaxa(), 2, ',', '.') }}
                     </span>
                 </div>
-                <a href="{{ route('admin.pedidos-online.show', $pedido->id) }}" class="block w-full bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white text-center px-4 py-3 rounded-xl font-semibold shadow-lg transition-all duration-200">
+                <a href="{{ route('admin.pedidos-online.show', ['pedido' => $pedido]) }}" class="block w-full bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white text-center px-4 py-3 rounded-xl font-semibold shadow-lg transition-all duration-200">
                     Ver Detalhes
                 </a>
             </div>

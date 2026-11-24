@@ -207,6 +207,7 @@ class RelatorioController extends Controller
         // Buscar TODOS os garçons ativos
         $garcons = DB::table('users')
             ->join('roles', 'users.role_id', '=', 'roles.id')
+            ->where('users.loja_id', app(\App\Support\LojaContext::class)->id())
             ->where('roles.nome', 'garcom')
             ->where('users.ativo', true)
             ->select('users.id', 'users.nome')
@@ -230,6 +231,7 @@ class RelatorioController extends Controller
                 if (!empty($pedidosIds)) {
                     // Buscar pagamentos que contêm os pedidos deste garçom
                     $pagamentoIds = DB::table('pagamento_detalhes')
+                        ->where('loja_id', app(\App\Support\LojaContext::class)->id())
                         ->whereIn('pedido_id', $pedidosIds)
                         ->pluck('pagamento_id')
                         ->unique()

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Categoria;
+use App\Support\LojaValidation;
 use Illuminate\Http\Request;
 
 class CategoriaController extends Controller
@@ -21,7 +22,7 @@ class CategoriaController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'nome' => 'required|string|max:100|unique:categorias',
+            'nome' => ['required', 'string', 'max:100', LojaValidation::unique('categorias', 'nome')],
             'descricao' => 'nullable|string',
             'ordem' => 'required|integer|min:1',
         ], [
@@ -50,7 +51,7 @@ class CategoriaController extends Controller
     public function update(Request $request, Categoria $categoria)
     {
         $validated = $request->validate([
-            'nome' => 'required|string|max:100|unique:categorias,nome,' . $categoria->id,
+            'nome' => ['required', 'string', 'max:100', LojaValidation::unique('categorias', 'nome', $categoria->id)],
             'descricao' => 'nullable|string',
             'ordem' => 'required|integer|min:1',
             'ativo' => 'boolean',

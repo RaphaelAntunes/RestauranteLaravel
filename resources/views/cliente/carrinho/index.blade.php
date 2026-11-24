@@ -7,7 +7,7 @@
 
 @if($itens->isEmpty())
     <div class="bg-white rounded-lg shadow p-8 text-center">
-        <i class="fas fa-shopping-cart text-6xl text-gray-300 mb-4"></i>
+        <x-dobra-icon name="bag" class="text-6xl text-gray-300 mb-4"/>
         <p class="text-gray-600 text-lg mb-4">Seu carrinho está vazio</p>
         <a href="{{ route('cliente.cardapio') }}" class="inline-block bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700">
             Ver Cardápio
@@ -33,11 +33,11 @@
                         <div class="flex items-center gap-2">
                             <span class="text-gray-700">Qtd: {{ $item->quantidade }}</span>
 
-                            <form action="{{ route('cliente.carrinho.remover', $item->id) }}" method="POST">
+                            <form action="{{ route('cliente.carrinho.remover', ['item' => $item]) }}" method="POST">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="text-red-600 hover:text-red-800">
-                                    <i class="fas fa-trash"></i>
+                                    <x-dobra-icon name="trash" class=""/>
                                 </button>
                             </form>
                         </div>

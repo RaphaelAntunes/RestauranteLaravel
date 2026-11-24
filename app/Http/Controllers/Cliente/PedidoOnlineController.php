@@ -12,6 +12,7 @@ use App\Models\PedidoItemSabor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class PedidoOnlineController extends Controller
 {
@@ -29,22 +30,33 @@ class PedidoOnlineController extends Controller
 
         $enderecos = $cliente->enderecos;
 
-        return view('cliente.pedido.checkout', compact('itens', 'subtotal', 'config', 'enderecos'));
+        return view('cliente.pedido.checkout', compact('cliente', 'itens', 'subtotal', 'config', 'enderecos'));
     }
 
     public function finalizarPedido(Request $request)
     {
+        $cliente = Auth::guard('cliente')->user();
+        $precisaNome = $this->precisaInformarNome($cliente);
+
         $request->validate([
+            'nome_cliente' => [Rule::requiredIf($precisaNome), 'nullable', 'string', 'min:2', 'max:100'],
             'tipo_pedido' => 'required|in:delivery,retirada',
-            'cliente_endereco_id' => 'required_if:tipo_pedido,delivery|nullable|exists:cliente_enderecos,id',
+            'cliente_endereco_id' => [
+                'required_if:tipo_pedido,delivery',
+                'nullable',
+                Rule::exists('cliente_enderecos', 'id')->where(fn ($query) => $query
+                    ->where('cliente_id', $cliente->id)
+                    ->where('loja_id', app(\App\Support\LojaContext::class)->id())),
+            ],
             'observacoes' => 'nullable|string|max:500',
             'observacoes_entrega' => 'nullable|string|max:500',
         ], [
+            'nome_cliente.required' => 'Informe seu nome para finalizar o pedido.',
+            'nome_cliente.min' => 'Informe um nome válido.',
             'tipo_pedido.required' => 'Selecione o tipo de pedido.',
             'cliente_endereco_id.required_if' => 'Selecione um endereço de entrega.',
         ]);
 
-        $cliente = Auth::guard('cliente')->user();
         $itens = $this->getCarrinhoItens()->get();
 
         if ($itens->isEmpty()) {
@@ -65,9 +77,17 @@ class PedidoOnlineController extends Controller
 
         $taxaEntrega = ($request->tipo_pedido === 'delivery') ? $config->calcularTaxaEntrega($subtotal) : 0;
 
+        if ($request->tipo_pedido === 'delivery' && !$cliente->enderecos()->whereKey($request->cliente_endereco_id)->exists()) {
+            return back()->withErrors(['cliente_endereco_id' => 'Selecione um endereço cadastrado no seu perfil.'])->withInput();
+        }
+
         DB::beginTransaction();
 
         try {
+            if ($precisaNome) {
+                $cliente->update(['nome' => trim($request->nome_cliente)]);
+            }
+
             $numeroPedido = $this->gerarNumeroPedido();
 
             $pedido = Pedido::create([
@@ -120,11 +140,17 @@ class PedidoOnlineController extends Controller
                     'message' => 'Pedido realizado com sucesso!',
                     'pedido_id' => $pedido->id,
                     'numero_pedido' => $pedido->numero_pedido,
-                    'redirect_url' => route('cliente.pedido.acompanhar', $pedido->id),
+                    'redirect_url' => route('cliente.pedido.acompanhar', [
+                        'loja' => $request->route('loja')->slug,
+                        'pedido' => $pedido,
+                    ]),
                 ]);
             }
 
-            return redirect()->route('cliente.pedido.acompanhar', $pedido->id)
+            return redirect()->route('cliente.pedido.acompanhar', [
+                'loja' => $request->route('loja')->slug,
+                'pedido' => $pedido,
+            ])
                 ->with('success', 'Pedido realizado com sucesso!');
         } catch (\Exception $e) {
             DB::rollBack();
@@ -236,6 +262,10 @@ class PedidoOnlineController extends Controller
 
         return response()->json([
             'success' => true,
+            'cliente' => [
+                'nome' => $this->precisaInformarNome($cliente) ? null : $cliente->nome,
+                'precisa_nome' => $this->precisaInformarNome($cliente),
+            ],
             'enderecos' => $enderecos,
             'config' => [
                 'delivery_aberto' => $config->isDeliveryAberto(),
@@ -293,5 +323,14 @@ class PedidoOnlineController extends Controller
     {
         $this->getCarrinhoItens()->delete();
         session()->forget('carrinho_session_id');
+    }
+
+    private function precisaInformarNome($cliente): bool
+    {
+        $nome = trim((string) $cliente?->nome);
+
+        return $nome === ''
+            || strcasecmp($nome, 'Visitante') === 0
+            || preg_match('/^Cliente\s+\d{4}$/i', $nome) === 1;
     }
 }

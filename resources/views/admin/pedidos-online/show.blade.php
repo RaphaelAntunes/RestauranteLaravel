@@ -86,7 +86,7 @@
                         </div>
                         @if(!$pedido->isFinalizado() && !$pedido->isCancelado())
                         <div class="mt-4 flex gap-2">
-                            <form action="{{ route('admin.pedidos-online.remover-item', $item->id) }}" method="POST" onsubmit="return confirm('Tem certeza que deseja remover este item?')">
+                            <form action="{{ route('admin.pedidos-online.remover-item', ['item' => $item]) }}" method="POST" onsubmit="return confirm('Tem certeza que deseja remover este item?')">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 text-sm font-medium">
@@ -183,7 +183,7 @@
                     <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Alterar Status</h2>
                 </div>
                 <div class="p-6">
-                    <form action="{{ route('admin.pedidos-online.status', $pedido->id) }}" method="POST">
+                    <form action="{{ route('admin.pedidos-online.status', ['pedido' => $pedido]) }}" method="POST">
                         @csrf
                         <div class="space-y-3">
                             <select name="status" class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm">

@@ -2,14 +2,17 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToLoja;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 
 class ClienteEndereco extends Model
 {
-    use HasFactory;
+    use HasFactory, BelongsToLoja;
 
     protected $fillable = [
+        'loja_id',
         'cliente_id',
         'nome_endereco',
         'cep',
@@ -47,7 +50,9 @@ class ClienteEndereco extends Model
 
     public function marcarComoPadrao(): void
     {
-        $this->cliente->enderecos()->update(['padrao' => false]);
-        $this->update(['padrao' => true]);
+        DB::transaction(function () {
+            $this->cliente->enderecos()->whereKeyNot($this->id)->update(['padrao' => false]);
+            $this->update(['padrao' => true]);
+        });
     }
 }

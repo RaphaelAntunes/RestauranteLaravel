@@ -12,8 +12,13 @@ class OtpService
         OtpCode::where('celular', $celular)->delete();
 
         $otp = OtpCode::gerarCodigo($celular, $ip);
-
-        Log::info("📱 OTP para {$celular}: {$otp->codigo}");
+        // Só expõe o código em log no ambiente local para facilitar o desenvolvimento.
+        if (app()->environment(['local', 'testing'])) {
+            Log::debug('Código OTP gerado para autenticação local.', [
+                'celular' => $celular,
+                'codigo' => $otp->codigo,
+            ]);
+        }
 
         return $otp;
     }

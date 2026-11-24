@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Cliente;
 
 use App\Http\Controllers\Controller;
+use App\Models\CarrinhoItem;
 use App\Models\Cliente;
 use App\Services\OtpService;
 use Illuminate\Http\Request;
@@ -17,22 +18,41 @@ class ClienteAuthController extends Controller
         $this->otpService = $otpService;
     }
 
-    public function showLoginForm()
+    public function showLoginForm(Request $request)
     {
-        return view('cliente.auth.login');
+        if ($request->query('origem') === 'checkout') {
+            $request->session()->put('url.intended', route('cliente.cardapio', [
+                'checkout' => 1,
+            ]));
+        }
+
+        return view('cliente.auth.login', ['demo' => \App\Support\EntradaDemonstracao::ativa()]);
     }
 
     public function enviarOtp(Request $request)
     {
         $request->validate([
-            'celular' => ['required', 'string', 'min:10', 'max:15'],
+            'celular' => ['required', 'string', 'max:20'],
         ], [
             'celular.required' => 'O número de celular é obrigatório.',
-            'celular.min' => 'O celular deve ter pelo menos 10 dígitos.',
         ]);
 
-        // Normalizar o celular (remover formatação se houver)
-        $celular = preg_replace('/[^0-9]/', '', $request->celular);
+        $celular = preg_replace('/\D/', '', $request->celular);
+
+        if (!preg_match('/^\d{10,15}$/', $celular)) {
+            return back()->withErrors(['celular' => 'Informe um celular com DDD e de 10 a 15 números.'])->withInput();
+        }
+
+        if (\App\Support\EntradaDemonstracao::ativa()) {
+            // Keep unverified visits isolated, even when the phone matches an existing customer.
+            $cliente = Cliente::create([
+                'celular' => '~' . bin2hex(random_bytes(7)),
+                'nome' => 'Visitante',
+                'ativo' => true,
+            ]);
+            $request->session()->put('demo_cliente_celular', $celular);
+            return $this->entrar($request, $cliente, false);
+        }
 
         $this->otpService->enviarCodigo($celular, $request->ip());
 
@@ -72,21 +92,59 @@ class ClienteAuthController extends Controller
                 ['nome' => 'Cliente ' . substr($celular, -4), 'ativo' => true]
             );
 
-            Auth::guard('cliente')->login($cliente, true);
+            if (!$cliente->ativo) {
+                return back()->with('error', 'Este cadastro está temporariamente indisponível.');
+            }
 
-            $cliente->update(['ultimo_acesso' => now()]);
-
-            session()->forget('otp_celular');
-
-            return redirect()->route('cliente.cardapio')->with('success', 'Login realizado com sucesso!');
+            return $this->entrar($request, $cliente, true);
         }
 
         return back()->with('error', 'Código inválido ou expirado. Tente novamente.');
     }
 
-    public function logout()
+    private function entrar(Request $request, Cliente $cliente, bool $lembrar)
     {
+        Auth::guard('cliente')->login($cliente, $lembrar);
+
+        // Preserve items added before login so the customer can finish checkout.
+        $carrinhoSessionId = session('carrinho_session_id');
+        if ($carrinhoSessionId) {
+            CarrinhoItem::query()
+                ->whereNull('cliente_id')
+                ->where('session_id', $carrinhoSessionId)
+                ->update(['cliente_id' => $cliente->id]);
+        }
+
+        $cliente->update(['ultimo_acesso' => now()]);
+
+        session()->forget('otp_celular');
+        $request->session()->regenerate();
+
+        return redirect()->intended(route('cliente.cardapio', [
+            'loja' => $request->segment(2),
+        ]))->with('success', 'Login realizado com sucesso!');
+    }
+
+    public function logout(Request $request)
+    {
+        $clienteId = Auth::guard('cliente')->id();
+        $carrinhoSessionId = $request->session()->get('carrinho_session_id');
+
+        if ($clienteId && $carrinhoSessionId) {
+            CarrinhoItem::query()
+                ->where('cliente_id', $clienteId)
+                ->where('session_id', $carrinhoSessionId)
+                ->update(['cliente_id' => null]);
+        }
+
         Auth::guard('cliente')->logout();
-        return redirect()->route('cliente.login')->with('success', 'Logout realizado com sucesso!');
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        if ($carrinhoSessionId) {
+            $request->session()->put('carrinho_session_id', $carrinhoSessionId);
+        }
+
+        return redirect()->route('cliente.cardapio')->with('success', 'Você saiu da conta. Sua sacola continua salva neste dispositivo.');
     }
 }

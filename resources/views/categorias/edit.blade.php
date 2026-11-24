@@ -20,7 +20,7 @@
 
     <!-- Form -->
     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-200 dark:border-gray-700 p-6">
-        <form action="{{ route('categorias.update', $categoria) }}" method="POST">
+        <form action="{{ route('categorias.update', ['categoria' => $categoria]) }}" method="POST">
             @csrf
             @method('PUT')
 

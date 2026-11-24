@@ -2,17 +2,19 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToLoja;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Log extends Model
 {
-    use HasFactory;
+    use HasFactory, BelongsToLoja;
 
     public $timestamps = false;
 
     protected $fillable = [
+        'loja_id',
         'user_id',
         'acao',
         'tabela',

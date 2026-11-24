@@ -52,7 +52,7 @@
             @foreach($mesasOnline as $mesa)
             <div class="group bg-gray-800 rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border-2 cursor-pointer
                 {{ $mesa->tipo == 'delivery' ? 'border-purple-500' : 'border-indigo-500' }}"
-                onclick="showLoading('Abrindo comanda...'); window.location.href='{{ route('garcom.comanda', $mesa) }}'">
+                onclick="showLoading('Abrindo comanda...'); window.location.href='{{ route('garcom.comanda', ['mesa' => $mesa]) }}'">
 
                 <div class="p-4 {{ $mesa->tipo == 'delivery' ? 'bg-gradient-to-br from-purple-600 to-purple-700' : 'bg-gradient-to-br from-indigo-600 to-indigo-700' }}">
                     <div class="flex justify-between items-start">
@@ -98,7 +98,7 @@
             @else gray-400 @endif
             @if($mesa->status == 'disponivel' || $mesa->status == 'ocupada' || $mesa->pedidos_count > 0) cursor-pointer @endif"
             @if($mesa->status == 'disponivel' || $mesa->status == 'ocupada' || $mesa->pedidos_count > 0)
-                onclick="showLoading('Abrindo comanda da Mesa {{ $mesa->numero }}...'); window.location.href='{{ route('garcom.comanda', $mesa) }}'"
+                onclick="showLoading('Abrindo comanda da Mesa {{ $mesa->numero }}...'); window.location.href='{{ route('garcom.comanda', ['mesa' => $mesa]) }}'"
             @endif>
 
             <!-- Header da Mesa -->

@@ -7,11 +7,19 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (DB::getDriverName() === 'sqlite') {
+            return;
+        }
+
         DB::statement("ALTER TABLE pedidos MODIFY COLUMN status ENUM('aberto', 'em_preparo', 'pronto', 'saiu_entrega', 'entregue', 'finalizado', 'cancelado') DEFAULT 'aberto'");
     }
 
     public function down(): void
     {
+        if (DB::getDriverName() === 'sqlite') {
+            return;
+        }
+
         DB::statement("ALTER TABLE pedidos MODIFY COLUMN status ENUM('aberto', 'em_preparo', 'pronto', 'entregue', 'finalizado', 'cancelado') DEFAULT 'aberto'");
     }
 };

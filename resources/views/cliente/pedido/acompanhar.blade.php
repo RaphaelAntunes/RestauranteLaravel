@@ -34,7 +34,7 @@
                 <div class="flex flex-col items-center">
                     <div class="w-12 h-12 rounded-full flex items-center justify-center {{ $isCompleted ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-600' }} {{ $isCurrent ? 'ring-4 ring-green-200' : '' }}">
                         @if($isCompleted)
-                            <i class="fas fa-check"></i>
+                            <x-dobra-icon name="check" class=""/>
                         @else
                             <span class="text-lg font-bold">{{ $statusIndex + 1 }}</span>
                         @endif
@@ -49,7 +49,7 @@
 
         @if($pedido->previsao_entrega)
             <p class="text-center text-gray-600">
-                <i class="fas fa-clock"></i> Previsão de entrega: {{ $pedido->previsao_entrega->format('H:i') }}
+                <x-dobra-icon name="clock" class=""/> Previsão de entrega: {{ $pedido->previsao_entrega->format('H:i') }}
             </p>
         @endif
     </div>

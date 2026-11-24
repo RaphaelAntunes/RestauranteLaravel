@@ -3,6 +3,7 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Routing\Middleware\SubstituteBindings;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -15,13 +16,22 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => \App\Http\Middleware\CheckRole::class,
             'cliente.auth' => \App\Http\Middleware\ClienteAuth::class,
             'cliente.guest' => \App\Http\Middleware\ClienteGuest::class,
+            'loja' => \App\Http\Middleware\ResolveLoja::class,
+            'loja.user' => \App\Http\Middleware\EnsureUserBelongsToLoja::class,
+            'loja.cliente' => \App\Http\Middleware\EnsureClienteBelongsToLoja::class,
+            'platform.admin' => \App\Http\Middleware\EnsurePlatformAdmin::class,
+            'active' => \App\Http\Middleware\CheckUserActive::class,
         ]);
 
-        // Verificar se usuário está ativo em todas as requisições web
-        $middleware->appendToGroup('web', \App\Http\Middleware\CheckUserActive::class);
+        // A loja precisa estar resolvida antes dos model bindings para que o
+        // escopo de tenant também proteja URLs contendo IDs de recursos.
+        $middleware->prependToPriorityList(
+            SubstituteBindings::class,
+            \App\Http\Middleware\ResolveLoja::class
+        );
 
-        // Verificar se reconhecimento facial é obrigatório
-        $middleware->appendToGroup('web', \App\Http\Middleware\CheckFacialObrigatorio::class);
+        $middleware->appendToGroup('web', \App\Http\Middleware\EncerrarDemoDesativada::class);
+
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

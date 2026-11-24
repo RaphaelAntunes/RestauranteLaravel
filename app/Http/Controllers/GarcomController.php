@@ -18,6 +18,13 @@ class GarcomController extends Controller
     public function index()
     {
         $mesas = Mesa::with('pedidoOnline.cliente')
+            ->where(function ($query) {
+                $query->where('tipo', 'normal')
+                    ->orWhere(function ($online) {
+                        $online->whereIn('tipo', ['delivery', 'retirada'])
+                            ->where('ativo', true);
+                    });
+            })
             ->orderByRaw("FIELD(tipo, 'delivery', 'retirada', 'normal')")
             ->orderBy('numero')
             ->get();
@@ -187,9 +194,9 @@ class GarcomController extends Controller
 
         // Se não há mais pedidos ativos
         if ($pedidosAtivos == 0) {
-            // Se for mesa virtual (online), deletar
+            // Preservar a referência histórica da mesa virtual.
             if ($mesa->isOnline()) {
-                $mesa->delete();
+                $mesa->liberarMesaVirtual();
             } else {
                 // Mesa normal: liberar e preparar para nova sessão
                 $mesa->update([
@@ -305,9 +312,9 @@ class GarcomController extends Controller
 
                 // Se não há mais pedidos ativos
                 if ($pedidosAtivos == 0) {
-                    // Se for mesa virtual (online), deletar
+                    // Preservar a referência histórica da mesa virtual.
                     if ($mesa->isOnline()) {
-                        $mesa->delete();
+                        $mesa->liberarMesaVirtual();
                     } else {
                         // Mesa normal: liberar
                         $mesa->update([

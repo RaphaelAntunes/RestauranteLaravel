@@ -17,12 +17,20 @@ return new class extends Migration
         });
 
         // Popular com os nomes dos produtos existentes
-        DB::statement('
-            UPDATE pedido_itens
-            INNER JOIN produtos ON pedido_itens.produto_id = produtos.id
-            SET pedido_itens.produto_nome = produtos.nome
-            WHERE pedido_itens.produto_nome IS NULL
-        ');
+        if (DB::getDriverName() === 'sqlite') {
+            DB::statement('
+                UPDATE pedido_itens
+                SET produto_nome = (SELECT produtos.nome FROM produtos WHERE produtos.id = pedido_itens.produto_id)
+                WHERE produto_nome IS NULL
+            ');
+        } else {
+            DB::statement('
+                UPDATE pedido_itens
+                INNER JOIN produtos ON pedido_itens.produto_id = produtos.id
+                SET pedido_itens.produto_nome = produtos.nome
+                WHERE pedido_itens.produto_nome IS NULL
+            ');
+        }
     }
 
     /**

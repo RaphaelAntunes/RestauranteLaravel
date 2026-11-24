@@ -9,6 +9,15 @@
     @csrf
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div class="lg:col-span-2 space-y-6">
+            @if(blank($cliente->nome) || strcasecmp($cliente->nome, 'Visitante') === 0 || preg_match('/^Cliente\s+\d{4}$/i', $cliente->nome))
+                <div class="bg-white rounded-lg shadow p-6">
+                    <label for="nome_cliente" class="font-bold text-xl mb-2 block">Como podemos chamar você?</label>
+                    <input id="nome_cliente" name="nome_cliente" type="text" maxlength="100" autocomplete="name" required
+                           value="{{ old('nome_cliente') }}" class="w-full border rounded-lg p-3" placeholder="Digite seu nome">
+                    @error('nome_cliente')<p class="text-red-600 text-sm mt-2">{{ $message }}</p>@enderror
+                </div>
+            @endif
+
             <div class="bg-white rounded-lg shadow p-6">
                 <h3 class="font-bold text-xl mb-4">Tipo de Pedido</h3>
 

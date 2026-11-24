@@ -4,9 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\Role;
+use App\Support\LojaValidation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rule;
 
 class GarcomManagementController extends Controller
 {
@@ -29,7 +29,7 @@ class GarcomManagementController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'email' => 'required|email|unique:users,email',
+            'email' => ['required', 'email', LojaValidation::unique('users', 'email')],
             'senha' => 'required|min:6',
             'nome' => 'required|string|max:255',
         ]);
@@ -69,7 +69,7 @@ class GarcomManagementController extends Controller
         }
 
         $request->validate([
-            'email' => ['required', 'email', Rule::unique('users', 'email')->ignore($garcon->id)],
+            'email' => ['required', 'email', LojaValidation::unique('users', 'email', $garcon->id)],
             'nome' => 'required|string|max:255',
             'senha' => 'nullable|min:6',
         ]);
@@ -124,7 +124,6 @@ class GarcomManagementController extends Controller
             'pode_fechar_mesas' => 'required|boolean',
             'pode_cancelar_itens' => 'required|boolean',
             'pode_cancelar_pedidos' => 'required|boolean',
-            'facial_obrigatorio' => 'required|boolean',
         ]);
 
         $garcon->update([
@@ -132,7 +131,6 @@ class GarcomManagementController extends Controller
             'pode_fechar_mesas' => $request->pode_fechar_mesas,
             'pode_cancelar_itens' => $request->pode_cancelar_itens,
             'pode_cancelar_pedidos' => $request->pode_cancelar_pedidos,
-            'facial_obrigatorio' => $request->facial_obrigatorio,
         ]);
 
         return response()->json([

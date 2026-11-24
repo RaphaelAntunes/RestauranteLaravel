@@ -7,7 +7,7 @@
 
 @if($pedidos->isEmpty())
     <div class="bg-white rounded-lg shadow p-8 text-center">
-        <i class="fas fa-receipt text-6xl text-gray-300 mb-4"></i>
+        <x-dobra-icon name="bill" class="text-6xl text-gray-300 mb-4"/>
         <p class="text-gray-600 text-lg mb-4">Você ainda não fez nenhum pedido</p>
         <a href="{{ route('cliente.cardapio') }}" class="inline-block bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700">
             Ver Cardápio
@@ -41,7 +41,7 @@
                     </p>
                 </div>
 
-                <a href="{{ route('cliente.pedido.acompanhar', $pedido->id) }}" class="text-red-600 hover:underline">
+                <a href="{{ route('cliente.pedido.acompanhar', ['pedido' => $pedido]) }}" class="text-red-600 hover:underline">
                     Ver Detalhes →
                 </a>
             </div>

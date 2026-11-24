@@ -67,7 +67,7 @@
             <div class="group bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border-2
                 {{ $mesa->tipo == 'delivery' ? 'border-purple-400 dark:border-purple-500' : 'border-indigo-400 dark:border-indigo-500' }}
                 cursor-pointer"
-                onclick="showLoading('Abrindo comanda...'); window.location.href='{{ route('mesas.comanda', $mesa) }}'">
+                onclick="showLoading('Abrindo comanda...'); window.location.href='{{ route('mesas.comanda', ['mesa' => $mesa]) }}'">
 
                 <div class="p-4 {{ $mesa->tipo == 'delivery' ? 'bg-gradient-to-br from-purple-500 to-purple-600' : 'bg-gradient-to-br from-indigo-500 to-indigo-600' }}">
                     <div class="flex justify-between items-start">
@@ -116,7 +116,7 @@
             @else gray-400 dark:hover:border-gray-500 @endif
             @if($mesa->status == 'disponivel' || $mesa->status == 'ocupada' || $mesa->pedidos_count > 0) cursor-pointer @endif"
             @if($mesa->status == 'disponivel' || $mesa->status == 'ocupada' || $mesa->pedidos_count > 0)
-                onclick="showLoading('Abrindo comanda da Mesa {{ $mesa->numero }}...'); window.location.href='{{ route('mesas.comanda', $mesa) }}'"
+                onclick="showLoading('Abrindo comanda da Mesa {{ $mesa->numero }}...'); window.location.href='{{ route('mesas.comanda', ['mesa' => $mesa]) }}'"
             @endif>
 
             <!-- Header da Mesa -->
@@ -166,13 +166,13 @@
 
                 <!-- Botões de Ação -->
                 <div class="flex justify-between items-center pt-2 border-t border-gray-200 dark:border-gray-700">
-                    <a href="{{ route('mesas.edit', $mesa) }}" class="text-gray-600 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400 font-medium flex items-center space-x-1 transition-colors" onclick="event.stopPropagation()">
+                    <a href="{{ route('mesas.edit', ['mesa' => $mesa]) }}" class="text-gray-600 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400 font-medium flex items-center space-x-1 transition-colors" onclick="event.stopPropagation()">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                         </svg>
                         <span>Editar</span>
                     </a>
-                    <form action="{{ route('mesas.destroy', $mesa) }}" method="POST" class="inline" onclick="event.stopPropagation()">
+                    <form action="{{ route('mesas.destroy', ['mesa' => $mesa]) }}" method="POST" class="inline" onclick="event.stopPropagation()">
                         @csrf
                         @method('DELETE')
                         <button type="submit" class="text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 font-medium flex items-center space-x-1 transition-colors" onclick="return confirm('Tem certeza que deseja excluir esta mesa?')">

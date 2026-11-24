@@ -177,11 +177,11 @@
                     </span>
                 </div>
                 <div class="flex gap-2">
-                    <a href="{{ route('pedidos.show', $pedido) }}" class="flex-1 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white text-center px-4 py-3 rounded-xl font-semibold shadow-lg transition-all duration-200">
+                    <a href="{{ route('pedidos.show', ['pedido' => $pedido]) }}" class="flex-1 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white text-center px-4 py-3 rounded-xl font-semibold shadow-lg transition-all duration-200">
                         Ver Detalhes
                     </a>
                     @if(in_array($pedido->status, ['aberto', 'em_preparo']))
-                    <a href="{{ route('pedidos.edit', $pedido) }}" class="px-4 py-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-xl font-semibold transition-all duration-200">
+                    <a href="{{ route('pedidos.edit', ['pedido' => $pedido]) }}" class="px-4 py-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-xl font-semibold transition-all duration-200">
                         Editar
                     </a>
                     @endif

@@ -10,7 +10,7 @@
             <p class="text-gray-600 dark:text-gray-400 mt-1">Atualize as informações do garçom</p>
         </div>
 
-        <form action="{{ route('garcons.update', $garcon) }}" method="POST">
+        <form action="{{ route('garcons.update', ['garcon' => $garcon]) }}" method="POST">
             @csrf
             @method('PUT')
 

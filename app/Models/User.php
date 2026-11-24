@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToLoja;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -10,9 +11,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, BelongsToLoja;
 
     protected $fillable = [
+        'loja_id',
+        'is_platform_admin',
         'nome',
         'email',
         'senha',
@@ -23,8 +26,6 @@ class User extends Authenticatable
         'pode_fechar_mesas',
         'pode_cancelar_itens',
         'pode_cancelar_pedidos',
-        'face_embedding',
-        'facial_obrigatorio',
     ];
 
     protected $hidden = [
@@ -36,14 +37,13 @@ class User extends Authenticatable
     {
         return [
             'ativo' => 'boolean',
+            'is_platform_admin' => 'boolean',
             'ultimo_acesso' => 'datetime',
             'senha' => 'hashed',
             'pode_lancar_pedidos' => 'boolean',
             'pode_fechar_mesas' => 'boolean',
             'pode_cancelar_itens' => 'boolean',
             'pode_cancelar_pedidos' => 'boolean',
-            'face_embedding' => 'array',
-            'facial_obrigatorio' => 'boolean',
         ];
     }
 
