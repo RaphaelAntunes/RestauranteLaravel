@@ -33,10 +33,12 @@
     @if($lojaAtual->exibir_textos_banner)<div class="db-hero-copy">
         @if($casa)<p>{{ $casa }}</p>@endif
         <h1>{{ $lojaAtual->titulo_cardapio ?: 'Cardápio da casa' }}</h1>
-        <div class="db-meta"><span class="db-status">{{ $aberto ? 'Aberto para pedidos' : 'Pedidos fechados' }}</span>
-        @if($config->tempo_medio_preparo)<span><x-dobra-icon name="clock"/> Preparo: {{ $config->tempo_medio_preparo }} min</span>@endif</div>
         @if($lojaAtual->descricao)<p style="max-width:36rem">{{ $lojaAtual->descricao }}</p>@endif
     </div>@endif
+    <div class="db-hero-ops" aria-label="Informações de atendimento">
+        <span class="db-status {{ $aberto ? 'is-open' : 'is-closed' }}">{{ $aberto ? 'Aberto para pedidos' : 'Pedidos fechados' }}</span>
+        @if($config->tempo_medio_preparo)<span class="db-prep"><x-dobra-icon name="clock"/> Preparo: {{ $config->tempo_medio_preparo }} min</span>@endif
+    </div>
     </div></header>
 
     <div class="db-mobile-cats"><div class="db-wrap" id="categorias-mobile-container">

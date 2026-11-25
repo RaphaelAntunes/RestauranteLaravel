@@ -378,12 +378,16 @@ class MultiLojaIsolationTest extends TestCase
         Storage::disk('public')->assertExists($loja->banner_mobile_path);
         $this->assertFalse($loja->exibir_textos_banner);
 
-        $this->get(route('cliente.cardapio', ['loja' => $loja->slug]))
+        $customBannerResponse = $this->get(route('cliente.cardapio', ['loja' => $loja->slug]));
+        $customBannerResponse
             ->assertOk()
             ->assertSee('db-hero-art-only')
+            ->assertSee('db-hero-ops')
+            ->assertSee('db-status')
             ->assertDontSee('Sabor feito em casa')
             ->assertSee('storage/'.$loja->banner_path, false)
             ->assertSee('storage/'.$loja->banner_mobile_path, false);
+        $this->assertMatchesRegularExpression('/Aberto para pedidos|Pedidos fechados/', $customBannerResponse->getContent());
 
         $desktopPath = $loja->banner_path;
         $mobilePath = $loja->banner_mobile_path;

@@ -38,7 +38,7 @@
                 <small class="text-gray-500">Recomendado: 1080 × 608 px. Se não enviar, o banner do computador será adaptado.</small>
                 @if($loja->banner_mobile_path)<label class="flex items-center gap-2 text-sm text-red-700"><input type="checkbox" name="remover_banner_mobile" value="1"><span>Remover e usar o banner do computador</span></label>@endif
             </div>
-            <label class="md:col-span-2 flex items-start gap-3 rounded-xl border border-gray-300 p-4 bg-gray-50 dark:bg-gray-900"><input class="mt-1" type="checkbox" name="exibir_textos_banner" value="1" @checked(old('exibir_textos_banner', $loja->exibir_textos_banner))><span><strong class="block">Exibir textos sobre o banner</strong><small class="text-gray-500">Desative quando sua própria arte já tiver nome, chamada e informações visuais.</small></span></label>
+            <label class="md:col-span-2 flex items-start gap-3 rounded-xl border border-gray-300 p-4 bg-gray-50 dark:bg-gray-900"><input class="mt-1" type="checkbox" name="exibir_textos_banner" value="1" @checked(old('exibir_textos_banner', $loja->exibir_textos_banner))><span><strong class="block">Exibir nome e chamada sobre o banner</strong><small class="text-gray-500">Desative quando sua arte já tiver esses textos. Status da loja e tempo de preparo continuam visíveis para o cliente.</small></span></label>
             <div class="md:col-span-2"><button class="px-5 py-3 rounded-xl text-white font-bold" style="background:{{ $loja->cor_primaria }}">Salvar identidade</button></div>
         </form>
     </section>
